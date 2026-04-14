@@ -34,11 +34,11 @@ const QUICK_PRESETS = [
   { id: '7d', label: '7 días', get: () => ({ fechaDesde: isoOffset(-6), fechaHasta: isoToday() }) },
 ];
 
-function DashboardFilters({ filters, owners, onFilterChange, onClearFilters }) {
+function DashboardFilters({ filters, owners, vtas, onFilterChange, onClearFilters }) {
   // Contar filtros activos
   const activeFilterCount = useMemo(
-    () => [filters.fechaDesde, filters.fechaHasta, filters.propietarioId].filter(Boolean).length,
-    [filters.fechaDesde, filters.fechaHasta, filters.propietarioId]
+    () => [filters.fechaDesde, filters.fechaHasta, filters.propietarioId, filters.vtaId].filter(Boolean).length,
+    [filters.fechaDesde, filters.fechaHasta, filters.propietarioId, filters.vtaId]
   );
 
   const handleQuickPreset = (preset) => {
@@ -78,7 +78,20 @@ function DashboardFilters({ filters, owners, onFilterChange, onClearFilters }) {
         renderInput={(params) => (
           <TextField {...params} placeholder="Propietario" />
         )}
-        sx={{ minWidth: 160, flex: 1 }}
+        sx={{ minWidth: 140, flex: 1 }}
+      />
+      <Autocomplete
+        size="small"
+        options={vtas}
+        getOptionLabel={(v) => `${v.codigo} - ${v.nombre}`}
+        isOptionEqualToValue={(opt, val) => String(opt.id) === String(val?.id)}
+        value={vtas.find((v) => String(v.id) === String(filters.vtaId)) ?? null}
+        onChange={(_, newVal) => onFilterChange('vtaId', newVal ? newVal.id : '')}
+        disabled={!filters.propietarioId}
+        renderInput={(params) => (
+          <TextField {...params} placeholder="VTA" />
+        )}
+        sx={{ minWidth: 140, flex: 1 }}
       />
 
       {/* Botones rápidos */}

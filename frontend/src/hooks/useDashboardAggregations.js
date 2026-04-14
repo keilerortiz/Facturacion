@@ -6,7 +6,7 @@ import { useMemo } from 'react';
  * @param {Array} items - Movimientos recibidos del store.
  * @returns {{
  *   topPropietarios: Array<{ propietario: string, total: number, count: number }>,
- *   topVtas:         Array<{ vta: string, nombre: string, volumen: number, count: number }>
+ *   topVtas:         Array<{ vta: string, nombre: string, propietario: string, volumen: number, count: number }>
  * }}
  */
 export function useDashboardAggregations(items) {
@@ -29,17 +29,19 @@ export function useDashboardAggregations(items) {
       pEntry.count++;
       propietariosMap.set(item.propietarioId, pEntry);
 
-      // Agregar por VTA
-      const vEntry = vtasMap.get(item.vtaId) ?? {
+      // Agregar por VTA + Propietario (combinación única)
+      const vtaPropKey = `${item.vtaId}:${item.propietarioId}`;
+      const vEntry = vtasMap.get(vtaPropKey) ?? {
         vta: item.vtaCodigo,
         nombre: item.vtaNombre ?? '',
+        propietario: item.propietario,
         volumen: 0,
         count: 0,
         udmvta: item.udmvta ?? 'uds',
       };
       vEntry.volumen += typeof item.cantidad === 'number' ? item.cantidad : 0;
       vEntry.count++;
-      vtasMap.set(item.vtaId, vEntry);
+      vtasMap.set(vtaPropKey, vEntry);
     }
 
     const topPropietarios = [...propietariosMap.values()]

@@ -30,11 +30,11 @@ import { useDashboardAggregations } from '../../hooks/useDashboardAggregations';
 function TopBar({ label, valueLabel, pct }) {
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="baseline" sx={{ mb: 0.5 }}>
-        <Typography variant="body2" noWrap sx={{ maxWidth: '60%', fontWeight: 500 }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="baseline" sx={{ mb: 0.5, gap: 1 }}>
+        <Typography variant="body2" noWrap sx={{ maxWidth: '75%', fontWeight: 500, fontSize: '0.85rem' }}>
           {label}
         </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0, fontSize: '0.8rem' }}>
           {valueLabel}
         </Typography>
       </Stack>
@@ -62,10 +62,12 @@ function DashboardPage() {
   const [movimientosData, setMovimientosData] = useState(() => movimientosStore.get());
   const [loading, setLoading] = useState(!movimientosData);
   const [owners, setOwners] = useState([]);
+  const [filterVtas, setFilterVtas] = useState([]);
   const [filters, setFilters] = useState({
     fechaDesde: getTodayDate(),
     fechaHasta: getTodayDate(),
-    propietarioId: ''
+    propietarioId: '',
+    vtaId: ''
   });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -82,6 +84,24 @@ function DashboardPage() {
     };
     loadOwners();
   }, []);
+
+  // Cargar VTAs cuando cambia el propietarioId
+  useEffect(() => {
+    const loadVtas = async () => {
+      if (!filters.propietarioId) {
+        setFilterVtas([]);
+        return;
+      }
+      try {
+        const response = await movimientosService.listVtasByOwner(filters.propietarioId);
+        setFilterVtas(response.items || []);
+      } catch (error) {
+        console.error('Error cargando VTAs:', error);
+        setFilterVtas([]);
+      }
+    };
+    loadVtas();
+  }, [filters.propietarioId]);
 
   // Función para cargar datos con filtros
   const loadInitialData = async () => {
@@ -121,7 +141,12 @@ function DashboardPage() {
   }, []);
 
   const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+    setFilters((prev) => {
+      if (key === 'propietarioId') {
+        return { ...prev, propietarioId: value, vtaId: '' };
+      }
+      return { ...prev, [key]: value };
+    });
     setPage(0);
   };
 
@@ -129,7 +154,8 @@ function DashboardPage() {
     setFilters({
       fechaDesde: getTodayDate(),
       fechaHasta: getTodayDate(),
-      propietarioId: ''
+      propietarioId: '',
+      vtaId: ''
     });
     setPage(0);
   }, []);
@@ -193,6 +219,7 @@ function DashboardPage() {
           <DashboardFilters
             filters={filters}
             owners={owners}
+            vtas={filterVtas}
             onFilterChange={handleFilterChange}
             onClearFilters={handleClearFilters}
           />
@@ -298,7 +325,7 @@ function DashboardPage() {
                 {topVtas.map((v, idx) => (
                   <TopBar
                     key={`vta-${idx}`}
-                    label={v.nombre ? `${v.vta} · ${v.nombre}` : v.vta}
+                    label={`${v.vta} · ${v.nombre} (${v.propietario})`}
                     valueLabel={`${v.volumen.toFixed(2)} ${v.udmvta}`}
                     pct={(v.volumen / maxVolumen) * 100}
                   />
@@ -316,6 +343,7 @@ function DashboardPage() {
         rowsPerPage={rowsPerPage}
         onPageChange={setPage}
         onRowsPerPageChange={handleRowsPerPageChange}
+        filters={filters}
       />
     </>
   );
