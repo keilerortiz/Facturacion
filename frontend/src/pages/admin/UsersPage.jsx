@@ -123,7 +123,7 @@ function UsersPage() {
       <PageHeader
         eyebrow="Administracion"
         title="Usuarios y acceso"
-        description="Gestiona las cuentas de operadores y administradores, su estado y reseteo de credenciales."
+        description="Gestiona las cuentas de operadores, consultores y administradores, su estado y reseteo de credenciales."
         chip="Solo administradores"
       />
 
@@ -172,6 +172,7 @@ function UsersPage() {
                 }
               >
                 <option value="operador">Operador</option>
+                <option value="consultor">Consultor</option>
                 <option value="admin">Administrador</option>
               </TextField>
               <Button type="submit" variant="contained" disabled={saving} fullWidth>

@@ -29,8 +29,22 @@ function AppRouter() {
         }
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="movimientos" element={<MovimientosPage />} />
+        <Route
+          path="dashboard"
+          element={
+            <ProtectedRoute roles={['admin', 'operador', 'consultor']}>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="movimientos"
+          element={
+            <ProtectedRoute roles={['admin', 'operador']}>
+              <MovimientosPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="usuarios"
           element={

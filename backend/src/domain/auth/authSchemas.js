@@ -10,7 +10,7 @@ export const registerSchema = z.object({
   usuario: z.string().trim().min(3).max(100),
   nombre: z.string().trim().min(1).max(150),
   password: z.string().min(8),
-  rol: z.enum([ROLES.ADMIN, ROLES.OPERADOR]).default(ROLES.OPERADOR)
+  rol: z.enum([ROLES.ADMIN, ROLES.OPERADOR, ROLES.CONSULTOR]).default(ROLES.OPERADOR)
 });
 
 export const changePasswordSchema = z

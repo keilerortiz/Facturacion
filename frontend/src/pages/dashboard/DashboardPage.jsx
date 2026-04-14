@@ -1,67 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
   Button,
-  Chip,
-  Divider,
+  CircularProgress,
   Grid,
   Paper,
   Stack,
   Typography,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import ListAltIcon from '@mui/icons-material/ListAlt';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { tokens } from '../../styles/theme';
+import DashboardFilters from '../../components/dashboard/DashboardFilters';
+import DashboardRecentActivityTable from '../../components/dashboard/DashboardRecentActivityTable';
 import StatCard from '../../components/common/StatCard';
 import { useAuth } from '../../context/AuthContext';
 import { movimientosStore } from '../../utils/movimientosStore';
-import { formatCurrency, formatDate } from '../../utils/date';
+import { formatCurrency, getTodayDate } from '../../utils/date';
+import { movimientosService } from '../../services/movimientosService';
 import { useDashboardKPIs } from '../../hooks/useDashboardKPIs';
 import { useDashboardAlerts } from '../../hooks/useDashboardAlerts';
 import { useDashboardAggregations } from '../../hooks/useDashboardAggregations';
-
-// ── Helpers de estado visual ──────────────────────────────────────────────────
-
-function getItemStatus(item) {
-  if (item.cantidad <= 0 || item.tarifa === null || item.tarifa === undefined || item.tarifa <= 0) {
-    return 'error';
-  }
-  return 'ok';
-}
-
-const STATUS_CFG = {
-  ok:      { label: 'OK',        color: '#2f855a', bg: 'rgba(47,133,90,0.10)'  },
-  warning: { label: 'Pendiente', color: '#b7791f', bg: 'rgba(183,121,31,0.10)' },
-  error:   { label: 'Error',     color: '#c05621', bg: 'rgba(192,86,33,0.10)'  },
-};
-
-function StatusBadge({ status }) {
-  const cfg = STATUS_CFG[status];
-  return (
-    <Box
-      sx={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        px: 1,
-        py: 0.25,
-        borderRadius: '4px',
-        bgcolor: cfg.bg,
-        color: cfg.color,
-        fontSize: '0.7rem',
-        fontWeight: 700,
-        letterSpacing: '0.04em',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {cfg.label}
-    </Box>
-  );
-}
 
 // ── Barra de proporción para Top 5 ───────────────────────────────────────────
 
@@ -98,10 +60,83 @@ function DashboardPage() {
   const navigate = useNavigate();
 
   const [movimientosData, setMovimientosData] = useState(() => movimientosStore.get());
+  const [loading, setLoading] = useState(!movimientosData);
+  const [owners, setOwners] = useState([]);
+  const [filters, setFilters] = useState({
+    fechaDesde: getTodayDate(),
+    fechaHasta: getTodayDate(),
+    propietarioId: ''
+  });
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // Cargar propietarios
+  useEffect(() => {
+    const loadOwners = async () => {
+      try {
+        const response = await movimientosService.listOwners();
+        setOwners(response.items || []);
+      } catch (error) {
+        console.error('Error cargando propietarios:', error);
+      }
+    };
+    loadOwners();
+  }, []);
+
+  // Función para cargar datos con filtros
+  const loadInitialData = async () => {
+    setLoading(true);
+    try {
+      const response = await movimientosService.list({
+        fechaDesde: filters.fechaDesde,
+        fechaHasta: filters.fechaHasta,
+        propietarioId: filters.propietarioId
+      });
+      setMovimientosData(response);
+      movimientosStore.set(response);
+    } catch (error) {
+      console.error('Error cargando datos del dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Carga inicial: si no hay datos en el store, cargar automáticamente
+  useEffect(() => {
+    if (!movimientosData) {
+      loadInitialData();
+    }
+  }, []);
+
+  // Recargar cuando cambian los filtros
+  useEffect(() => {
+    if (movimientosData) {
+      loadInitialData();
+    }
+  }, [filters]);
 
   // Suscripción reactiva: se actualiza cuando MovimientosPage resuelve /init
   useEffect(() => {
     return movimientosStore.subscribe(setMovimientosData);
+  }, []);
+
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setPage(0);
+  };
+
+  const handleClearFilters = useCallback(() => {
+    setFilters({
+      fechaDesde: getTodayDate(),
+      fechaHasta: getTodayDate(),
+      propietarioId: ''
+    });
+    setPage(0);
+  }, []);
+
+  const handleRowsPerPageChange = useCallback((newValue) => {
+    setRowsPerPage(newValue);
+    setPage(0);
   }, []);
 
   const items      = movimientosData?.items      ?? [];
@@ -115,6 +150,14 @@ function DashboardPage() {
   const maxVolumen     = topVtas[0]?.volumen          ?? 1;
 
   // ── Estado vacío ─────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   if (!movimientosData) {
     return (
       <>
@@ -126,11 +169,17 @@ function DashboardPage() {
             Sin datos operativos
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            El dashboard se activa al cargar la sección de Movimientos.
+            No hay movimientos registrados.
           </Typography>
-          <Button variant="contained" size="large" onClick={() => navigate('/movimientos')}>
-            Ir a Movimientos
-          </Button>
+          <Stack direction="row" spacing={2} justifyContent="center">
+            <Button 
+              variant="contained" 
+              startIcon={<RefreshIcon />}
+              onClick={loadInitialData}
+            >
+              Actualizar datos
+            </Button>
+          </Stack>
         </Paper>
       </>
     );
@@ -138,36 +187,30 @@ function DashboardPage() {
 
   return (
     <>
-      {/* ── Acciones rápidas ─────────────────────────────────────────────── */}
-      <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap sx={{ mb: 3 }}>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/movimientos')}
-          size="small"
-        >
-          Nuevo movimiento
-        </Button>
-        <Button
-          variant="outlined"
-          startIcon={<ListAltIcon />}
-          onClick={() => navigate('/movimientos')}
-          size="small"
-        >
-          Consultar movimientos
-        </Button>
+      {/* ── Filtros + Botón Actualizar ────────────────────────────────────── */}
+      <Stack direction="row" spacing={1.5} alignItems="flex-start" flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <DashboardFilters
+            filters={filters}
+            owners={owners}
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+          />
+        </Box>
         <Button
           variant="outlined"
-          startIcon={<FileDownloadOutlinedIcon />}
-          onClick={() => navigate('/movimientos')}
+          startIcon={<RefreshIcon />}
+          onClick={loadInitialData}
+          disabled={loading}
           size="small"
+          sx={{ mt: 0.5 }}
         >
-          Exportar información
+          Actualizar datos
         </Button>
       </Stack>
 
       {/* ── KPIs ──────────────────────────────────────────────────────────── */}
-      <Grid container spacing={2.5} sx={{ mb: 3 }}>
+      <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid item xs={6} md={3}>
           <StatCard
             label="Total movimientos hoy"
@@ -196,7 +239,7 @@ function DashboardPage() {
 
       {/* ── Alertas operativas (solo si hay) ──────────────────────────────── */}
       {alerts.length > 0 && (
-        <Stack spacing={1} sx={{ mb: 3 }}>
+        <Stack spacing={1} sx={{ mb: 2 }}>
           {alerts.map((a) => (
             <Alert
               key={a.id}
@@ -221,19 +264,19 @@ function DashboardPage() {
       )}
 
       {/* ── Análisis operativo: Top 5 ─────────────────────────────────────── */}
-      <Grid container spacing={2.5} sx={{ mb: 3 }}>
+      <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid item xs={12} md={6}>
-          <Paper elevation={1} sx={{ p: 2.5, border: `1px solid ${tokens.borderCard}`, height: '100%' }}>
-            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 700 }}>
+          <Paper elevation={1} sx={{ p: 2, border: `1px solid ${tokens.borderCard}`, height: '100%' }}>
+            <Typography variant="subtitle1" sx={{ mb: 1.5, fontWeight: 700 }}>
               Top propietarios · facturación
             </Typography>
             {topPropietarios.length === 0 ? (
               <Typography variant="body2" color="text.secondary">Sin datos</Typography>
             ) : (
-              <Stack spacing={1.75}>
-                {topPropietarios.map((p) => (
+              <Stack spacing={1.5}>
+                {topPropietarios.map((p, idx) => (
                   <TopBar
-                    key={p.propietario}
+                    key={`propietario-${idx}`}
                     label={p.propietario}
                     valueLabel={formatCurrency(p.total)}
                     pct={(p.total / maxFacturacion) * 100}
@@ -244,17 +287,17 @@ function DashboardPage() {
           </Paper>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Paper elevation={1} sx={{ p: 2.5, border: `1px solid ${tokens.borderCard}`, height: '100%' }}>
-            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 700 }}>
+          <Paper elevation={1} sx={{ p: 2, border: `1px solid ${tokens.borderCard}`, height: '100%' }}>
+            <Typography variant="subtitle1" sx={{ mb: 1.5, fontWeight: 700 }}>
               Top VTA · volumen
             </Typography>
             {topVtas.length === 0 ? (
               <Typography variant="body2" color="text.secondary">Sin datos</Typography>
             ) : (
-              <Stack spacing={1.75}>
-                {topVtas.map((v) => (
+              <Stack spacing={1.5}>
+                {topVtas.map((v, idx) => (
                   <TopBar
-                    key={v.vta}
+                    key={`vta-${idx}`}
                     label={v.nombre ? `${v.vta} · ${v.nombre}` : v.vta}
                     valueLabel={`${v.volumen.toFixed(2)} ${v.udmvta}`}
                     pct={(v.volumen / maxVolumen) * 100}
@@ -267,93 +310,13 @@ function DashboardPage() {
       </Grid>
 
       {/* ── Actividad reciente ────────────────────────────────────────────── */}
-      <Paper elevation={1} sx={{ border: `1px solid ${tokens.borderCard}` }}>
-        <Box sx={{ px: 2.5, pt: 2.5, pb: 1.5 }}>
-          <Stack direction="row" alignItems="baseline" spacing={1.5}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              Actividad reciente
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              últimos {items.length} registros del día
-            </Typography>
-          </Stack>
-        </Box>
-        <Divider />
-        {items.length === 0 ? (
-          <Box sx={{ p: 3 }}>
-            <Typography variant="body2" color="text.secondary">Sin registros disponibles.</Typography>
-          </Box>
-        ) : (
-          <Box sx={{ overflowX: 'auto' }}>
-            <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
-              <Box component="thead">
-                <Box component="tr" sx={{ bgcolor: tokens.tableHeadBg }}>
-                  {['Fecha', 'Propietario · VTA', 'Tipo', 'Cantidad', 'Total', 'Estado'].map((h) => (
-                    <Box
-                      component="th"
-                      key={h}
-                      sx={{
-                        px: 2,
-                        py: 1.25,
-                        textAlign: 'left',
-                        fontSize: '0.7rem',
-                        fontWeight: 700,
-                        color: tokens.tableHeadColor,
-                        letterSpacing: '0.05em',
-                        textTransform: 'uppercase',
-                        borderBottom: `1px solid ${tokens.tableHeadBorder}`,
-                      }}
-                    >
-                      {h}
-                    </Box>
-                  ))}
-                </Box>
-              </Box>
-              <Box component="tbody">
-                {items.map((item, idx) => (
-                  <Box
-                    component="tr"
-                    key={item.id}
-                    sx={{
-                      bgcolor: idx % 2 === 0 ? 'background.paper' : tokens.bgSubtle,
-                      '&:hover': { bgcolor: tokens.hoverRow },
-                    }}
-                  >
-                    <Box component="td" sx={{ px: 2, py: 1.25, fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
-                      {formatDate(item.fecha)}
-                    </Box>
-                    <Box component="td" sx={{ px: 2, py: 1.25 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
-                        {item.propietario}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {item.vtaCodigo}
-                      </Typography>
-                    </Box>
-                    <Box component="td" sx={{ px: 2, py: 1.25 }}>
-                      {item.tipovta ? (
-                        <Chip label={item.tipovta} size="small" variant="outlined" sx={{ fontSize: '0.7rem', height: 20 }} />
-                      ) : (
-                        <Typography variant="caption" color="text.secondary">—</Typography>
-                      )}
-                    </Box>
-                    <Box component="td" sx={{ px: 2, py: 1.25, fontSize: '0.82rem', fontWeight: 600 }}>
-                      {item.cantidad.toFixed(2)}
-                    </Box>
-                    <Box component="td" sx={{ px: 2, py: 1.25, fontSize: '0.82rem' }}>
-                      {item.total != null ? formatCurrency(item.total) : '—'}
-                    </Box>
-                    <Box component="td" sx={{ px: 2, py: 1.25 }}>
-                      <StatusBadge status={getItemStatus(item)} />
-                    </Box>
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          </Box>
-        )}
-      </Paper>
-
+      <DashboardRecentActivityTable
+        items={items}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={setPage}
+        onRowsPerPageChange={handleRowsPerPageChange}
+      />
     </>
   );
 }

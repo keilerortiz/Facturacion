@@ -97,7 +97,6 @@ function MovimientoForm({
                 onChange={(event) => onChange('fecha', event.target.value)}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
-                helperText={`Permitidas: ${allowedDates.join(', ')}`}
                 inputProps={{
                   min: allowedDates[0],
                   max: allowedDates[allowedDates.length - 1]
@@ -111,7 +110,6 @@ function MovimientoForm({
                 onChange={(event) => onChange('decada', event.target.value)}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
-                helperText="Debe pertenecer al mismo mes y anio de la fecha"
                 inputProps={{
                   min: monthBounds.min,
                   max: monthBounds.max
@@ -145,11 +143,6 @@ function MovimientoForm({
                 <TextField
                   {...params}
                   label="VTA"
-                  helperText={
-                    values.propietarioId
-                      ? 'Se limpia automaticamente si cambias el propietario'
-                      : 'Selecciona primero un propietario'
-                  }
                 />
               )}
             />
