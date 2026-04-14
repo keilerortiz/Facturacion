@@ -1,0 +1,5 @@
+IF DB_ID(N'MovimientosDB') IS NULL
+BEGIN
+    CREATE DATABASE MovimientosDB;
+END;
+GO
