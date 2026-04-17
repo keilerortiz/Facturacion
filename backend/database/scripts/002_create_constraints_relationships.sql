@@ -13,7 +13,7 @@ IF OBJECT_ID(N'UQ_Usuarios_Usuario', N'UQ') IS NULL
     ALTER TABLE dbo.Usuarios ADD CONSTRAINT UQ_Usuarios_Usuario UNIQUE (usuario);
 GO
 IF OBJECT_ID(N'CK_Usuarios_Rol', N'C') IS NULL
-    ALTER TABLE dbo.Usuarios ADD CONSTRAINT CK_Usuarios_Rol CHECK (rol IN (N'admin', N'operador'));
+    ALTER TABLE dbo.Usuarios ADD CONSTRAINT CK_Usuarios_Rol CHECK (rol IN (N'admin', N'operador', N'consultor'));
 GO
 IF OBJECT_ID(N'CK_Usuarios_Usuario_NotBlank', N'C') IS NULL
     ALTER TABLE dbo.Usuarios ADD CONSTRAINT CK_Usuarios_Usuario_NotBlank CHECK (LEN(LTRIM(RTRIM(usuario))) > 0);
@@ -94,6 +94,23 @@ IF OBJECT_ID(N'CK_Logs_Usuario_NotBlank', N'C') IS NULL
     ALTER TABLE dbo.Logs ADD CONSTRAINT CK_Logs_Usuario_NotBlank CHECK (LEN(LTRIM(RTRIM(usuario))) > 0);
 GO
 
+-- Constraints para nuevas columnas (migraciones 002-011)
+IF OBJECT_ID(N'CK_VTAs_CECO_NotBlank', N'C') IS NULL
+    ALTER TABLE dbo.VTAs ADD CONSTRAINT CK_VTAs_CECO_NotBlank CHECK (ceco IS NULL OR LEN(LTRIM(RTRIM(ceco))) > 0);
+GO
+
+IF OBJECT_ID(N'DF_Movimientos_FechaCreacion', N'D') IS NULL
+    ALTER TABLE dbo.Movimientos ADD CONSTRAINT DF_Movimientos_Default_Version DEFAULT (1) FOR version;
+GO
+
+-- Constraints para tabla Jobs
+IF OBJECT_ID(N'DF_Jobs_FechaCreacion', N'D') IS NULL
+    ALTER TABLE dbo.Jobs ADD CONSTRAINT DF_Jobs_FechaCreacion DEFAULT (SYSUTCDATETIME()) FOR fecha_creacion;
+GO
+IF OBJECT_ID(N'CK_Jobs_Status_Valid', N'C') IS NULL
+    ALTER TABLE dbo.Jobs ADD CONSTRAINT CK_Jobs_Status_Valid CHECK (status IN (N'pending', N'processing', N'completed', N'failed'));
+GO
+
 IF OBJECT_ID(N'FK_VTAs_Propietarios', N'F') IS NULL
     ALTER TABLE dbo.VTAs ADD CONSTRAINT FK_VTAs_Propietarios FOREIGN KEY (propietario_id) REFERENCES dbo.Propietarios(id);
 GO
@@ -130,4 +147,8 @@ GO
 
 IF OBJECT_ID(N'FK_Logs_Movimientos', N'F') IS NULL
     ALTER TABLE dbo.Logs ADD CONSTRAINT FK_Logs_Movimientos FOREIGN KEY (movimiento_id) REFERENCES dbo.Movimientos(id);
+GO
+
+IF OBJECT_ID(N'FK_Jobs_Usuarios', N'F') IS NULL
+    ALTER TABLE dbo.Jobs ADD CONSTRAINT FK_Jobs_Usuarios FOREIGN KEY (usuario_id) REFERENCES dbo.Usuarios(id);
 GO

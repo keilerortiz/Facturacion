@@ -25,6 +25,7 @@ BEGIN
     CREATE TABLE dbo.Propietarios (
         id INT IDENTITY(1,1) NOT NULL,
         nombre NVARCHAR(150) NOT NULL,
+        nit NVARCHAR(50) NULL,
         CONSTRAINT PK_Propietarios PRIMARY KEY CLUSTERED (id)
     );
 END;
@@ -37,6 +38,10 @@ BEGIN
         propietario_id INT NOT NULL,
         codigo NVARCHAR(50) NOT NULL,
         nombre NVARCHAR(150) NOT NULL,
+        tipovta NVARCHAR(50) NULL,
+        udmvta NVARCHAR(50) NULL,
+        requiere_tipo BIT NULL,
+        ceco NVARCHAR(50) NULL,
         CONSTRAINT PK_VTAs PRIMARY KEY CLUSTERED (id)
     );
 END;
@@ -68,6 +73,7 @@ BEGIN
         expira_en DATETIME2(0) NOT NULL,
         revocado_en DATETIME2(0) NULL,
         fecha_creacion DATETIME2(0) NOT NULL,
+        familia NVARCHAR(64) NULL,
         CONSTRAINT PK_RefreshTokens PRIMARY KEY CLUSTERED (id)
     );
 END;
@@ -83,10 +89,14 @@ BEGIN
         vta_id INT NOT NULL,
         cantidad DECIMAL(18,2) NOT NULL,
         observaciones NVARCHAR(MAX) NULL,
+        tipovta NVARCHAR(20) NULL,
+        tarifa DECIMAL(18,2) NULL,
+        total DECIMAL(18,2) NULL,
         usuario_creacion_id INT NOT NULL,
         fecha_creacion DATETIME2(0) NOT NULL,
         usuario_modificacion_id INT NULL,
         fecha_modificacion DATETIME2(0) NULL,
+        version INT NULL,
         CONSTRAINT PK_Movimientos PRIMARY KEY CLUSTERED (id)
     );
 END;
@@ -103,6 +113,24 @@ BEGIN
         usuario NVARCHAR(150) NOT NULL,
         fecha DATETIME2(0) NOT NULL,
         CONSTRAINT PK_Logs PRIMARY KEY CLUSTERED (id)
+    );
+END;
+GO
+
+IF OBJECT_ID(N'dbo.Jobs', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Jobs (
+        id INT IDENTITY(1,1) NOT NULL,
+        job_type NVARCHAR(50) NOT NULL,
+        status NVARCHAR(50) NOT NULL,
+        usuario_id INT NOT NULL,
+        params NVARCHAR(MAX) NULL,
+        result NVARCHAR(MAX) NULL,
+        error_message NVARCHAR(MAX) NULL,
+        fecha_creacion DATETIME2(0) NOT NULL,
+        fecha_inicio DATETIME2(0) NULL,
+        fecha_fin DATETIME2(0) NULL,
+        CONSTRAINT PK_Jobs PRIMARY KEY CLUSTERED (id)
     );
 END;
 GO
