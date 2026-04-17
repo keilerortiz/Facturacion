@@ -40,7 +40,7 @@ function AppRouter() {
         <Route
           path="movimientos"
           element={
-            <ProtectedRoute roles={['admin', 'operador']}>
+            <ProtectedRoute roles={['operador']}>
               <MovimientosPage />
             </ProtectedRoute>
           }
