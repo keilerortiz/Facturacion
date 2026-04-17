@@ -16,44 +16,6 @@ import { tokens } from '../../styles/theme';
 import { movimientosService } from '../../services/movimientosService';
 import { getApiErrorMessage } from '../../utils/apiError';
 
-// ── Helpers de estado visual ──────────────────────────────────────────────────
-
-function getItemStatus(item) {
-  if (item.cantidad <= 0 || item.tarifa === null || item.tarifa === undefined || item.tarifa <= 0) {
-    return 'error';
-  }
-  return 'ok';
-}
-
-const STATUS_CFG = {
-  ok:      { label: 'OK',        color: '#2f855a', bg: 'rgba(47,133,90,0.10)'  },
-  warning: { label: 'Pendiente', color: '#b7791f', bg: 'rgba(183,121,31,0.10)' },
-  error:   { label: 'Error',     color: '#c05621', bg: 'rgba(192,86,33,0.10)'  },
-};
-
-function StatusBadge({ status }) {
-  const cfg = STATUS_CFG[status];
-  return (
-    <Box
-      sx={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        px: 1,
-        py: 0.25,
-        borderRadius: '4px',
-        bgcolor: cfg.bg,
-        color: cfg.color,
-        fontSize: '0.7rem',
-        fontWeight: 700,
-        letterSpacing: '0.04em',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {cfg.label}
-    </Box>
-  );
-}
-
 // ── Componente principal ─────────────────────────────────────────────────────
 
 function DashboardRecentActivityTable({
@@ -135,7 +97,7 @@ function DashboardRecentActivityTable({
             <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
               <Box component="thead" sx={{ position: 'sticky', top: 0, zIndex: 10 }}>
                 <Box component="tr" sx={{ bgcolor: tokens.tableHeadBg }}>
-                  {['Fecha', 'Propietario · VTA', 'CECO', 'Tipo', 'Cantidad', 'Total', 'Estado'].map((h) => (
+                  {['Fecha', 'Propietario · VTA', 'CECO', 'Tipo', 'Cantidad', 'Total'].map((h) => (
                     <Box
                       component="th"
                       key={h}
@@ -198,9 +160,6 @@ function DashboardRecentActivityTable({
                       </Box>
                       <Box component="td" sx={{ px: 2, py: 1.25, fontSize: '0.82rem' }}>
                         {item.total != null ? formatCurrency(item.total) : '—'}
-                      </Box>
-                      <Box component="td" sx={{ px: 2, py: 1.25 }}>
-                        <StatusBadge status={getItemStatus(item)} />
                       </Box>
                     </Box>
                   );
