@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(sed 's/.*\\\\.//')"
+      "Bash(sed 's/.*\\\\.//')",
+      "Bash(npm install *)",
+      "Bash(npx vite *)"
     ]
   }
 }

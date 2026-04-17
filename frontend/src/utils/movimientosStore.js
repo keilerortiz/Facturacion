@@ -1,12 +1,11 @@
 /**
- * Store compartido de módulo para datos de movimientos.
+ * @deprecated Reemplazado por React Query (QueryClientProvider).
+ * La caché compartida entre páginas ahora la gestiona automáticamente
+ * @tanstack/react-query a través de los hooks en hooks/queries/.
  *
- * Patrón: single source of truth entre páginas.
- * - MovimientosPage lo escribe después de resolver /init.
- * - DashboardPage lo lee sin hacer llamadas propias a la API.
- *
- * Al ser un módulo (singleton), todos los imports comparten la misma instancia
- * durante la sesión del browser. Se resetea en recarga de página (intencional).
+ * Este archivo se mantiene solo por compatibilidad en caso de que algún
+ * import externo no haya sido migrado. Puede eliminarse de forma segura
+ * una vez confirmado que ningún componente lo importa.
  */
 
 let _data = null;

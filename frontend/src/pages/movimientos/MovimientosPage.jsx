@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
   Box,
@@ -25,17 +26,15 @@ import MovimientosFilters from '../../components/movimientos/MovimientosFilters'
 import MovimientosTable, { COLUMNS as TABLE_COLUMNS } from '../../components/movimientos/MovimientosTable';
 import HistorialDialog from '../../components/movimientos/HistorialDialog';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { useOwnersQuery } from '../../hooks/queries/useOwnersQuery';
+import { useVtasByOwnerQuery } from '../../hooks/queries/useVtasByOwnerQuery';
+import { useTarifaQuery } from '../../hooks/queries/useTarifaQuery';
+import { useMovimientosListQuery } from '../../hooks/queries/useMovimientosListQuery';
+import { usePaginationState } from '../../hooks/filters/usePaginationState';
 import { movimientosService } from '../../services/movimientosService';
-import { createTtlCache } from '../../utils/cache';
-import { deduplicatedFetch } from '../../utils/requestDeduplicator';
-import { movimientosStore } from '../../utils/movimientosStore';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { formatCurrency, getAllowedMovimientoDates, getTodayDate } from '../../utils/date';
 import { tokens } from '../../styles/theme';
-
-const ownersCache = createTtlCache();
-const vtasCache = createTtlCache();
-const tarifasCache = createTtlCache();
 
 const initialFilters = {
   fechaDesde: getTodayDate(),
@@ -59,272 +58,115 @@ const initialForm = {
 };
 
 const toggleableCols = TABLE_COLUMNS.filter((c) => c.toggleable);
-
 const COL_POPOVER_ANCHOR = { vertical: 'bottom', horizontal: 'right' };
 const COL_POPOVER_TRANSFORM = { vertical: 'top', horizontal: 'right' };
 const COL_POPOVER_PAPER = { elevation: 3, sx: { p: 1.5, width: 200, mt: 0.5, borderRadius: '10px', border: `1px solid ${tokens.borderMedium}` } };
 
 function MovimientosPage() {
-  const [owners, setOwners] = useState([]);
-  const [formVtas, setFormVtas] = useState([]);
-  const [filterVtas, setFilterVtas] = useState([]);
-  const [tarifa, setTarifa] = useState(null);
-  const [filters, setFilters] = useState(initialFilters);
-  const debouncedFilters = useDebouncedValue(filters, 450);
-  const [form, setForm] = useState(initialForm);
-  const [items, setItems] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [order, setOrder] = useState('desc');
-  const [orderBy, setOrderBy] = useState('fecha');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [loadingTable, setLoadingTable] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [exporting, setExporting] = useState(false);
+  const queryClient = useQueryClient();
+
+  // ── Estado local (solo UI) ────────────────────────────────────────────────
+  const [filters, setFilters]           = useState(initialFilters);
+  const debouncedFilters                = useDebouncedValue(filters, 450);
+  const [form, setForm]                 = useState(initialForm);
+  const [order, setOrder]               = useState('desc');
+  const [orderBy, setOrderBy]           = useState('fecha');
+  const [submitting, setSubmitting]     = useState(false);
+  const [exporting, setExporting]       = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyItems, setHistoryItems] = useState([]);
   const [historyMovement, setHistoryMovement] = useState(null);
   const [editingMovement, setEditingMovement] = useState(null);
-  const [formError, setFormError] = useState('');
-  const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
-  const showToast = useCallback((message, severity = 'success') => setToast({ open: true, message, severity }), []);
-  const closeToast = useCallback(() => setToast((t) => ({ ...t, open: false })), []);
-  const activeFilterCount = Object.values(filters).filter(Boolean).length;
-  const formDataRef = useRef();
-  const loadMovimientosAbortRef = useRef(null);
-  // Previene que loadMovimientos corra en el primer mount (ya cubierto por /init)
-  const initDoneRef = useRef(false);
+  const [formError, setFormError]       = useState('');
+  const [toast, setToast]               = useState({ open: false, message: '', severity: 'success' });
+  const [density, setDensity]           = useState('compact');
+  const [visibleColumnIds, setVisibleColumnIds] = useState(null);
+  const [colAnchor, setColAnchor]       = useState(null);
 
-  // ── Grid state ────────────────────────────────────────────────────────────
-  const [density, setDensity] = useState('compact');
-  const [visibleColumnIds, setVisibleColumnIds] = useState(null); // null = todas
-  const [colAnchor, setColAnchor] = useState(null);
+  const { page, rowsPerPage, setPage, handlePageChange, handleRowsPerPageChange } =
+    usePaginationState(10);
 
-  const effectiveVisible = useMemo(
+  // Ref para acceder al estado más reciente desde callbacks no-reactivos
+  const stateRef = useRef();
+  stateRef.current = { form, editingMovement, formVtas: null };
+
+  // ── Queries (React Query) ─────────────────────────────────────────────────
+  const { data: owners = [] } = useOwnersQuery();
+
+  const { data: filterVtas = [] } = useVtasByOwnerQuery(filters.propietarioId);
+
+  const { data: formVtas = [] } = useVtasByOwnerQuery(form.propietarioId);
+  stateRef.current.formVtas = formVtas;
+
+  const { data: tarifa = null } = useTarifaQuery({
+    propietarioId: form.propietarioId,
+    vtaId: form.vtaId,
+  });
+
+  const {
+    data: movimientosData,
+    isFetching: loadingTable,
+  } = useMovimientosListQuery({
+    filters: debouncedFilters,
+    page,
+    rowsPerPage,
+    sortBy: orderBy,
+    sortDir: order,
+  });
+
+  const items = movimientosData?.items ?? [];
+  const total = movimientosData?.pagination?.total ?? 0;
+
+  // ── Derived ───────────────────────────────────────────────────────────────
+  const activeFilterCount  = Object.values(filters).filter(Boolean).length;
+  const effectiveVisible   = useMemo(
     () => visibleColumnIds ?? toggleableCols.map((c) => c.id),
     [visibleColumnIds]
   );
+  const pageCantidadTotal  = useMemo(
+    () => items.reduce((acc, it) => acc + Number(it.cantidad || 0), 0),
+    [items]
+  );
 
-  const handleDensityChange = useCallback((_, v) => { if (v) setDensity(v); }, []);
-  const handleOpenColMenu = useCallback((e) => setColAnchor(e.currentTarget), []);
-  const handleCloseColMenu = useCallback(() => setColAnchor(null), []);
-  const handleToggleColumn = useCallback((colId, checked) => {
-    setVisibleColumnIds((prev) => {
-      const current = prev ?? toggleableCols.map((c) => c.id);
-      const next = checked
-        ? [...current, colId]
-        : current.filter((id) => id !== colId);
-      return next.length === toggleableCols.length ? null : next;
-    });
-  }, []);
+  // ── Invalidar lista (equivalente a loadMovimientos) ───────────────────────
+  const invalidateList = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['movimientos', 'list'] });
+  }, [queryClient]);
 
-  const loadOwners = async () => {
-    const cachedOwners = ownersCache.get('owners');
-
-    if (cachedOwners) {
-      setOwners(cachedOwners);
-      return;
-    }
-
-    const response = await deduplicatedFetch('owners', () => movimientosService.listOwners());
-    ownersCache.set('owners', response.items || []);
-    setOwners(response.items || []);
-  };
-
-  const loadVtas = async (propietarioId, target) => {
-    if (!propietarioId) {
-      if (target === 'form') {
-        setFormVtas([]);
-      } else {
-        setFilterVtas([]);
-      }
-      return;
-    }
-
-    const cacheKey = `owner-${propietarioId}`;
-    const cached = vtasCache.get(cacheKey);
-    const assign = target === 'form' ? setFormVtas : setFilterVtas;
-
-    if (cached) {
-      assign(cached);
-      return;
-    }
-
-    const response = await deduplicatedFetch(
-      `vtas:${propietarioId}`,
-      () => movimientosService.listVtasByOwner(propietarioId)
-    );
-    vtasCache.set(cacheKey, response.items || []);
-    assign(response.items || []);
-  };
-
-  const loadTarifa = async (propietarioId, vtaId) => {
-    if (!propietarioId || !vtaId) {
-      setTarifa(null);
-      return;
-    }
-
-    const cacheKey = `${propietarioId}:${vtaId}`;
-    if (tarifasCache.has(cacheKey)) {
-      setTarifa(tarifasCache.get(cacheKey));
-      return;
-    }
-
-    const response = await deduplicatedFetch(
-      `tarifa:${propietarioId}:${vtaId}`,
-      () => movimientosService.getRate(propietarioId, vtaId)
-    );
-    tarifasCache.set(cacheKey, response.tarifa);
-    setTarifa(response.tarifa);
-  };
-
-  const loadMovimientos = useCallback(async () => {
-    // Cancelar request anterior si sigue en vuelo
-    loadMovimientosAbortRef.current?.abort();
-    const controller = new AbortController();
-    loadMovimientosAbortRef.current = controller;
-
-    setLoadingTable(true);
-
-    try {
-      const response = await movimientosService.list({
-        ...debouncedFilters,
-        sortBy: orderBy,
-        sortDir: order,
-        limit: rowsPerPage,
-        offset: page * rowsPerPage
-      }, { signal: controller.signal });
-
-      if (!controller.signal.aborted) {
-        setItems(response.items || []);
-        setTotal(response.pagination?.total || 0);
-      }
-    } catch (requestError) {
-      if (!controller.signal.aborted) {
-        showToast(getApiErrorMessage(requestError, 'No fue posible cargar movimientos'), 'error');
-      }
-    } finally {
-      if (!controller.signal.aborted) {
-        setLoadingTable(false);
-      }
-    }
-  }, [debouncedFilters, order, orderBy, page, rowsPerPage]);
-
-  formDataRef.current = { form, editingMovement, formVtas, loadMovimientos };
-
-  useEffect(() => {
-    // deduplicatedFetch garantiza 1 sola llamada a /init aunque StrictMode duplique el efecto.
-    // La clave se limpia automáticamente tras resolver → re-navegación obtiene datos frescos.
-    deduplicatedFetch('movimientos:page:init', () =>
-      movimientosService.init({
-        ...initialFilters,
-        sortBy: 'fecha',
-        sortDir: 'desc',
-        limit: 10,
-        offset: 0
-      })
-    ).then((initData) => {
-      const ownersList = initData.propietarios || [];
-      ownersCache.set('owners', ownersList);
-      setOwners(ownersList);
-      setItems(initData.movimientos?.items || []);
-      setTotal(initData.movimientos?.pagination?.total || 0);
-      setLoadingTable(false);
-      initDoneRef.current = true;
-      // Publicar al store compartido para que DashboardPage no necesite sus propias llamadas
-      movimientosStore.set(initData.movimientos);
-    }).catch((requestError) => {
-      showToast(getApiErrorMessage(requestError, 'No fue posible cargar los datos iniciales'), 'error');
-      setLoadingTable(false);
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    // Salta la ejecución del mount: el /init ya cargó la primera página
-    if (!initDoneRef.current) return;
-    loadMovimientos();
-  }, [loadMovimientos]);
-
-  useEffect(() => {
-    loadVtas(filters.propietarioId, 'filter').catch((requestError) => {
-      showToast(getApiErrorMessage(requestError, 'No fue posible cargar VTAs de filtro'), 'error');
-    });
-  }, [filters.propietarioId]);
-
-  useEffect(() => {
-    loadVtas(form.propietarioId, 'form').catch((requestError) => {
-      setFormError(getApiErrorMessage(requestError, 'No fue posible cargar VTAs'));
-    });
-  }, [form.propietarioId]);
-
-  useEffect(() => {
-    loadTarifa(form.propietarioId, form.vtaId).catch((requestError) => {
-      setFormError(getApiErrorMessage(requestError, 'No fue posible consultar la tarifa'));
-    });
-  }, [form.propietarioId, form.vtaId]);
+  // ── Handlers de UI ────────────────────────────────────────────────────────
+  const showToast  = useCallback((message, severity = 'success') => setToast({ open: true, message, severity }), []);
+  const closeToast = useCallback(() => setToast((t) => ({ ...t, open: false })), []);
 
   const handleFilterChange = useCallback((field, value) => {
     setPage(0);
     setFilters((current) => {
-      if (field === 'propietarioId') {
-        return {
-          ...current,
-          propietarioId: value,
-          vtaId: ''
-        };
-      }
-
-      return {
-        ...current,
-        [field]: value
-      };
+      if (field === 'propietarioId') return { ...current, propietarioId: value, vtaId: '' };
+      return { ...current, [field]: value };
     });
-  }, []);
+  }, [setPage]);
 
   const handleApplyFilters = useCallback((partial) => {
     setPage(0);
     setFilters((current) => ({ ...current, ...partial }));
-  }, []);
+  }, [setPage]);
 
   const handleFormChange = useCallback((field, value) => {
     setFormError('');
     setForm((current) => {
       if (field === 'fecha') {
-        const nextDate = value;
         const currentMonthKey = current.decada?.slice(0, 7);
-        const nextMonthKey = nextDate?.slice(0, 7);
-
-        return {
-          ...current,
-          fecha: nextDate,
-          decada: currentMonthKey === nextMonthKey ? current.decada : nextDate
-        };
+        const nextMonthKey    = value?.slice(0, 7);
+        return { ...current, fecha: value, decada: currentMonthKey === nextMonthKey ? current.decada : value };
       }
-
-      if (field === 'propietarioId') {
-        return {
-          ...current,
-          propietarioId: value,
-          vtaId: ''
-        };
-      }
-
-      return {
-        ...current,
-        [field]: value
-      };
+      if (field === 'propietarioId') return { ...current, propietarioId: value, vtaId: '' };
+      return { ...current, [field]: value };
     });
   }, []);
 
   const handleExport = useCallback(async () => {
     setExporting(true);
     try {
-      await movimientosService.exportExcel({
-        ...debouncedFilters,
-        sortBy: orderBy,
-        sortDir: order
-      });
+      await movimientosService.exportExcel({ ...debouncedFilters, sortBy: orderBy, sortDir: order });
       showToast('Archivo descargado correctamente');
     } catch (requestError) {
       showToast(getApiErrorMessage(requestError, 'No fue posible generar el archivo Excel'), 'error');
@@ -334,34 +176,42 @@ function MovimientosPage() {
   }, [debouncedFilters, orderBy, order, showToast]);
 
   const handleSort = useCallback((column) => {
-    setOrder((prevOrder) => {
-      const isAsc = orderBy === column && prevOrder === 'asc';
-      return isAsc ? 'desc' : 'asc';
-    });
+    setOrder((prev) => (orderBy === column && prev === 'asc' ? 'desc' : 'asc'));
     setOrderBy(column);
     setPage(0);
-  }, [orderBy]);
+  }, [orderBy, setPage]);
 
-  const handleResetFilters = useCallback(() => { setFilters(initialFilters); setPage(0); }, []);
+  const handleResetFilters  = useCallback(() => { setFilters(initialFilters); setPage(0); }, [setPage]);
+  const handleRowsPerChange = useCallback((value) => handleRowsPerPageChange(value), [handleRowsPerPageChange]);
 
   const resetForm = useCallback(() => {
     setEditingMovement(null);
-    setTarifa(null);
     setForm(initialForm);
     setFormError('');
   }, []);
-
-  const handleRowsPerPageChange = useCallback((value) => { setRowsPerPage(value); setPage(0); }, []);
 
   const handleCloseHistory = useCallback(() => {
     setHistoryMovement(null);
     setHistoryItems([]);
   }, []);
 
+  const handleDensityChange  = useCallback((_, v) => { if (v) setDensity(v); }, []);
+  const handleOpenColMenu    = useCallback((e) => setColAnchor(e.currentTarget), []);
+  const handleCloseColMenu   = useCallback(() => setColAnchor(null), []);
+  const handleToggleColumn   = useCallback((colId, checked) => {
+    setVisibleColumnIds((prev) => {
+      const current = prev ?? toggleableCols.map((c) => c.id);
+      const next    = checked ? [...current, colId] : current.filter((id) => id !== colId);
+      return next.length === toggleableCols.length ? null : next;
+    });
+  }, []);
+
+  // ── Submit (crear / actualizar) ───────────────────────────────────────────
   const handleSubmit = useCallback(async (event) => {
     event.preventDefault();
-    const { form, editingMovement, formVtas, loadMovimientos } = formDataRef.current;
+    const { form, editingMovement, formVtas } = stateRef.current;
 
+    // Validaciones
     const allowedDates = new Set(getAllowedMovimientoDates());
     if (!allowedDates.has(form.fecha)) {
       setFormError('La fecha solo puede ser hoy, ayer o hace dos dias.');
@@ -371,14 +221,9 @@ function MovimientosPage() {
       setFormError('La decada debe pertenecer al mismo mes y anio de la fecha.');
       return;
     }
-    if (!form.propietarioId) {
-      setFormError('Debes seleccionar un propietario.');
-      return;
-    }
-    if (!form.vtaId) {
-      setFormError('Debes seleccionar una VTA.');
-      return;
-    }
+    if (!form.propietarioId) { setFormError('Debes seleccionar un propietario.'); return; }
+    if (!form.vtaId)         { setFormError('Debes seleccionar una VTA.');         return; }
+
     const selectedVta = formVtas.find((v) => String(v.id) === String(form.vtaId));
     if (selectedVta?.requiereTipo && !form.tipovta) {
       setFormError('Debes seleccionar el tipo de movimiento (CARGUE o DESCARGUE) para esta VTA.');
@@ -392,52 +237,49 @@ function MovimientosPage() {
     setSubmitting(true);
     try {
       const payload = {
-        fecha: form.fecha,
-        decada: form.decada,
+        fecha:         form.fecha,
+        decada:        form.decada,
         propietarioId: Number(form.propietarioId),
-        vtaId: Number(form.vtaId),
-        cantidad: Number(form.cantidad),
-        tipovta: form.tipovta || null,
-        observaciones: form.observaciones?.trim() || null
+        vtaId:         Number(form.vtaId),
+        cantidad:      Number(form.cantidad),
+        tipovta:       form.tipovta || null,
+        observaciones: form.observaciones?.trim() || null,
       };
 
       const response = editingMovement
-        ? await movimientosService.update(editingMovement.id, {
-            ...payload,
-            version: editingMovement.version
-          })
+        ? await movimientosService.update(editingMovement.id, { ...payload, version: editingMovement.version })
         : await movimientosService.create(payload);
 
       showToast(response.message || 'Movimiento guardado correctamente');
-      // Invalidar caché de tarifas: pueden cambiar tras save (nuevo propietario/VTA)
-      tarifasCache.clear();
+
+      // Invalida tarifas (pueden cambiar tras guardar) y la lista
+      queryClient.invalidateQueries({ queryKey: ['movimientos', 'tarifa'] });
+      invalidateList();
       resetForm();
-      await loadMovimientos();
     } catch (requestError) {
       if (requestError?.response?.status === 409) {
         setFormError('Este movimiento fue modificado por otro usuario. Se recargarán los datos.');
         resetForm();
-        await loadMovimientos();
+        invalidateList();
       } else {
         setFormError(getApiErrorMessage(requestError, 'No fue posible guardar el movimiento'));
       }
     } finally {
       setSubmitting(false);
     }
-  }, [showToast, resetForm]);
+  }, [showToast, resetForm, invalidateList, queryClient]);
 
   const handleEdit = useCallback((item) => {
     setFormError('');
-    // Usa los datos del row de la tabla — ya incluyen 'version' para optimistic locking
     setEditingMovement(item);
     setForm({
-      fecha: item.fecha,
-      decada: item.decada,
+      fecha:         item.fecha,
+      decada:        item.decada,
       propietarioId: String(item.propietarioId),
-      vtaId: String(item.vtaId),
-      cantidad: String(item.cantidad),
-      tipovta: item.tipovta || '',
-      observaciones: item.observaciones || ''
+      vtaId:         String(item.vtaId),
+      cantidad:      String(item.cantidad),
+      tipovta:       item.tipovta || '',
+      observaciones: item.observaciones || '',
     });
   }, []);
 
@@ -445,7 +287,6 @@ function MovimientosPage() {
     setHistoryMovement(item);
     setHistoryItems([]);
     setLoadingHistory(true);
-
     try {
       const response = await movimientosService.history(item.id);
       setHistoryItems(response.items || []);
@@ -456,15 +297,13 @@ function MovimientosPage() {
     }
   }, [showToast]);
 
-  const pageCantidadTotal = useMemo(() => items.reduce((acc, it) => acc + Number(it.cantidad || 0), 0), [items]);
-
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <Box sx={{ height: '100%', pt: 0.5, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {editingMovement ? (
         <Chip label={`Editando #${editingMovement.id}`} size="small" color="secondary" variant="outlined" sx={{ mb: 1, alignSelf: 'flex-start' }} />
       ) : null}
 
-      {/* Snackbar toast */}
       <Snackbar
         open={toast.open}
         autoHideDuration={toast.severity === 'error' ? 6000 : 3500}
@@ -476,7 +315,6 @@ function MovimientosPage() {
         </Alert>
       </Snackbar>
 
-      {/* Two-column layout */}
       <Box sx={{ display: 'flex', gap: 2.5, flex: 1, minHeight: 0, overflow: 'hidden' }}>
 
         {/* LEFT — Form panel */}
@@ -495,10 +333,9 @@ function MovimientosPage() {
           />
         </Box>
 
-        {/* RIGHT — Filters + Toolbar + Bulk bar + Table */}
+        {/* RIGHT — Filters + Toolbar + Table */}
         <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
 
-          {/* Filter bar */}
           <MovimientosFilters
             filters={filters}
             owners={owners}
@@ -509,9 +346,8 @@ function MovimientosPage() {
             onApplyFilters={handleApplyFilters}
           />
 
-          {/* Toolbar: summary | density | columns | export */}
+          {/* Toolbar */}
           <Stack direction="row" alignItems="center" sx={{ gap: 1, flexWrap: 'nowrap' }}>
-            {/* Summary */}
             <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary', flexShrink: 0 }}>
               {loadingTable ? 'Cargando...' : `${total} resultado${total !== 1 ? 's' : ''}`}
             </Typography>
@@ -523,7 +359,6 @@ function MovimientosPage() {
 
             <Box sx={{ flex: 1 }} />
 
-            {/* Density toggle */}
             <ToggleButtonGroup
               value={density}
               exclusive
@@ -532,18 +367,13 @@ function MovimientosPage() {
               sx={{ '& .MuiToggleButton-root': { py: 0.25, px: 1, fontSize: '0.72rem', height: 30, textTransform: 'none', borderColor: tokens.borderStrong } }}
             >
               <ToggleButton value="compact">
-                <Tooltip title="Vista compacta">
-                  <ViewHeadlineIcon sx={{ fontSize: '16px' }} />
-                </Tooltip>
+                <Tooltip title="Vista compacta"><ViewHeadlineIcon sx={{ fontSize: '16px' }} /></Tooltip>
               </ToggleButton>
               <ToggleButton value="comfortable">
-                <Tooltip title="Vista cómoda">
-                  <TableRowsOutlinedIcon sx={{ fontSize: '16px' }} />
-                </Tooltip>
+                <Tooltip title="Vista cómoda"><TableRowsOutlinedIcon sx={{ fontSize: '16px' }} /></Tooltip>
               </ToggleButton>
             </ToggleButtonGroup>
 
-            {/* Column selector */}
             <Tooltip title="Columnas visibles">
               <IconButton
                 size="small"
@@ -559,7 +389,6 @@ function MovimientosPage() {
               </IconButton>
             </Tooltip>
 
-            {/* Export */}
             <Button
               variant="outlined"
               size="small"
@@ -574,7 +403,6 @@ function MovimientosPage() {
             </Button>
           </Stack>
 
-          {/* Column selector popover */}
           <Popover
             open={Boolean(colAnchor)}
             anchorEl={colAnchor}
@@ -603,7 +431,6 @@ function MovimientosPage() {
             ))}
           </Popover>
 
-          {/* Table */}
           <MovimientosTable
             items={items}
             loading={loadingTable}
@@ -612,8 +439,8 @@ function MovimientosPage() {
             total={total}
             order={order}
             orderBy={orderBy}
-            onPageChange={setPage}
-            onRowsPerPageChange={handleRowsPerPageChange}
+            onPageChange={handlePageChange}
+            onRowsPerPageChange={handleRowsPerChange}
             onSort={handleSort}
             onEdit={handleEdit}
             onHistory={handleOpenHistory}

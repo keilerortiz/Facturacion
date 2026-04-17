@@ -1,3 +1,7 @@
+/**
+ * @deprecated Reemplazado por el caché nativo de React Query (staleTime / gcTime).
+ * Mantener por compatibilidad hasta confirmar que no hay imports restantes.
+ */
 export function createTtlCache(ttlMs = Number(import.meta.env.VITE_CACHE_TTL_MS || 300000)) {
   const store = new Map();
   const getValidItem = (key) => {
