@@ -38,6 +38,9 @@ GO
 IF OBJECT_ID(N'CK_VTAs_Nombre_NotBlank', N'C') IS NULL
     ALTER TABLE dbo.VTAs ADD CONSTRAINT CK_VTAs_Nombre_NotBlank CHECK (LEN(LTRIM(RTRIM(nombre))) > 0);
 GO
+IF OBJECT_ID(N'DF_VTAs_RequiereTipo', N'D') IS NULL
+    ALTER TABLE dbo.VTAs ADD CONSTRAINT DF_VTAs_RequiereTipo DEFAULT (0) FOR requiere_tipo;
+GO
 
 IF OBJECT_ID(N'DF_Tarifas_Moneda', N'D') IS NULL
     ALTER TABLE dbo.Tarifas ADD CONSTRAINT DF_Tarifas_Moneda DEFAULT (N'COP') FOR moneda;
@@ -82,6 +85,9 @@ IF OBJECT_ID(N'CK_Movimientos_Cantidad_Positive', N'C') IS NULL
 GO
 IF OBJECT_ID(N'CK_Movimientos_MismoMesAnio', N'C') IS NULL
     ALTER TABLE dbo.Movimientos ADD CONSTRAINT CK_Movimientos_MismoMesAnio CHECK (YEAR(fecha) = YEAR(decada) AND MONTH(fecha) = MONTH(decada));
+GO
+IF OBJECT_ID(N'CK_Movimientos_Tipovta', N'C') IS NULL
+    ALTER TABLE dbo.Movimientos ADD CONSTRAINT CK_Movimientos_Tipovta CHECK (tipovta IS NULL OR tipovta IN (N'CARGUE', N'DESCARGUE'));
 GO
 
 IF OBJECT_ID(N'DF_Logs_Fecha', N'D') IS NULL
