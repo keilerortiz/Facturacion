@@ -188,14 +188,6 @@ function DashboardPage() {
         </Grid>
         <Grid item xs={6} md={3}>
           <StatCard
-            label={`Con alertas (${kpis.scope})`}
-            value={kpis.conErrores}
-            helper="Sin tarifa o cantidad ≤ 0"
-            tone="warning.main"
-          />
-        </Grid>
-        <Grid item xs={6} md={3}>
-          <StatCard
             label="Volumen acumulado"
             value={kpis.volumenTotal.toFixed(2)}
             helper="Σ cantidad · vista actual"
