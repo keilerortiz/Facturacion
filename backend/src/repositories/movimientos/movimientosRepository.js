@@ -444,11 +444,16 @@ export const movimientosRepository = {
         m.total,
         uc.usuario AS usuario,
         m.fecha_creacion,
-        m.observaciones
+        m.observaciones,
+        ISNULL(t.ceco, '') AS ceco
       FROM Movimientos m
       INNER JOIN Propietarios p ON m.propietario_id = p.id
       INNER JOIN VTAs v ON m.vta_id = v.id
       INNER JOIN Usuarios uc ON m.usuario_creacion_id = uc.id
+      LEFT JOIN Tarifas t 
+        ON m.propietario_id = t.propietario_id 
+        AND m.vta_id = t.vta_id 
+        AND t.activa = 1
       ${whereClause}
       ${orderClause}
     `;

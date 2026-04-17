@@ -79,10 +79,13 @@ function DashboardRecentActivityTable({
   const handleExport = useCallback(async () => {
     setExporting(true);
     try {
+      console.log('[DashboardRecentActivityTable] Exporting with filters:', filters);
       await movimientosService.exportExcel(filters);
       // Toast de éxito (opcional - el servicio descarga automáticamente)
     } catch (requestError) {
-      console.error('Error exportando:', getApiErrorMessage(requestError));
+      const errorMsg = getApiErrorMessage(requestError);
+      console.error('[DashboardRecentActivityTable] Error exportando:', errorMsg);
+      console.error('[DashboardRecentActivityTable] Error completo:', requestError);
     } finally {
       setExporting(false);
     }
@@ -135,7 +138,7 @@ function DashboardRecentActivityTable({
             <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
               <Box component="thead" sx={{ position: 'sticky', top: 0, zIndex: 10 }}>
                 <Box component="tr" sx={{ bgcolor: tokens.tableHeadBg }}>
-                  {['Fecha', 'Propietario · VTA', 'Tipo', 'Cantidad', 'Total', 'Estado'].map((h) => (
+                  {['Fecha', 'Propietario · VTA', 'Tipo', 'Cantidad', 'Total', 'CECO'].map((h) => (
                     <Box
                       component="th"
                       key={h}
@@ -192,8 +195,12 @@ function DashboardRecentActivityTable({
                       <Box component="td" sx={{ px: 2, py: 1.25, fontSize: '0.82rem' }}>
                         {item.total != null ? formatCurrency(item.total) : '—'}
                       </Box>
-                      <Box component="td" sx={{ px: 2, py: 1.25 }}>
-                        <StatusBadge status={getItemStatus(item)} />
+                      <Box component="td" sx={{ px: 2, py: 1.25, fontSize: '0.82rem' }}>
+                        {item.ceco ? (
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>{item.ceco}</Typography>
+                        ) : (
+                          <Typography variant="caption" color="text.secondary">—</Typography>
+                        )}
                       </Box>
                     </Box>
                   );
