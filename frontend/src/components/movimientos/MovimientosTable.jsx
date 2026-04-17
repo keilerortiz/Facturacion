@@ -31,6 +31,7 @@ export const COLUMNS = [
   { id: 'decada',        label: 'Década',      align: 'left',  defaultWidth: 90,  toggleable: true  },
   { id: 'propietario',   label: 'Propietario', align: 'left',  defaultWidth: 150, toggleable: true  },
   { id: 'vtaCodigo',     label: 'VTA',         align: 'left',  defaultWidth: 150, toggleable: true  },
+  { id: 'ceco',          label: 'CECO',        align: 'left',  defaultWidth: 100, sortable: false,  toggleable: true  },
   { id: 'tipovta',       label: 'Tipo',        align: 'left',  defaultWidth: 100, sortable: false,  toggleable: true  },
   { id: 'cantidad',      label: 'Cantidad',    align: 'right', defaultWidth: 90,  toggleable: true  },
   { id: 'total',         label: 'Total',       align: 'right', defaultWidth: 110, sortable: false,  toggleable: true  },
@@ -167,6 +168,18 @@ function renderCell(colId, item, cellPad) {
         <TableCell key="vtaCodigo" sx={{ padding: cellPad, maxWidth: 0 }}>
           <Typography variant="body2" sx={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.vtaCodigo}</Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{item.vtaNombre}</Typography>
+        </TableCell>
+      );
+    case 'ceco':
+      return (
+        <TableCell key="ceco" sx={{ padding: cellPad, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 0 }}>
+          {item.ceco ? (
+            <Tooltip title={item.ceco} placement="top-start">
+              <Typography variant="caption" sx={{ fontWeight: 500 }} noWrap>{item.ceco}</Typography>
+            </Tooltip>
+          ) : (
+            <Typography variant="caption" color="text.secondary">—</Typography>
+          )}
         </TableCell>
       );
     case 'tipovta':

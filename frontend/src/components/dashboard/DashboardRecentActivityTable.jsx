@@ -135,7 +135,7 @@ function DashboardRecentActivityTable({
             <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
               <Box component="thead" sx={{ position: 'sticky', top: 0, zIndex: 10 }}>
                 <Box component="tr" sx={{ bgcolor: tokens.tableHeadBg }}>
-                  {['Fecha', 'Propietario · VTA', 'Tipo', 'Cantidad', 'Total', 'Estado'].map((h) => (
+                  {['Fecha', 'Propietario · VTA', 'CECO', 'Tipo', 'Cantidad', 'Total', 'Estado'].map((h) => (
                     <Box
                       component="th"
                       key={h}
@@ -178,6 +178,13 @@ function DashboardRecentActivityTable({
                         <Typography variant="caption" color="text.secondary">
                           {item.vtaCodigo} {item.vtaNombre ? `- ${item.vtaNombre}` : ''}
                         </Typography>
+                      </Box>
+                      <Box component="td" sx={{ px: 2, py: 1.25, fontSize: '0.82rem' }}>
+                        {item.ceco ? (
+                          <Typography variant="caption" sx={{ fontWeight: 500 }}>{item.ceco}</Typography>
+                        ) : (
+                          <Typography variant="caption" color="text.secondary">—</Typography>
+                        )}
                       </Box>
                       <Box component="td" sx={{ px: 2, py: 1.25 }}>
                         {item.tipovta ? (

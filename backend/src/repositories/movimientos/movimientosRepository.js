@@ -107,7 +107,7 @@ export const movimientosRepository = {
     const request = await resolveRequest(executor);
 
     const result = await request.input('propietarioId', sql.Int, Number(propietarioId)).query(`
-      SELECT id, propietario_id, codigo, nombre, tipovta, udmvta, requiere_tipo
+      SELECT id, propietario_id, codigo, nombre, tipovta, udmvta, requiere_tipo, ceco
       FROM VTAs
       WHERE propietario_id = @propietarioId
       ORDER BY codigo ASC, nombre ASC
@@ -120,7 +120,7 @@ export const movimientosRepository = {
     const request = await resolveRequest(executor);
 
     const result = await request.input('id', sql.Int, Number(id)).query(`
-      SELECT id, propietario_id, codigo, nombre, tipovta, udmvta, requiere_tipo
+      SELECT id, propietario_id, codigo, nombre, tipovta, udmvta, requiere_tipo, ceco
       FROM VTAs
       WHERE id = @id
     `);
@@ -215,6 +215,7 @@ export const movimientosRepository = {
         m.vta_id,
         v.codigo AS vta_codigo,
         v.nombre AS vta_nombre,
+        v.ceco,
         v.udmvta,
         m.tipovta,
         m.cantidad,
@@ -257,6 +258,7 @@ export const movimientosRepository = {
         m.vta_id,
         v.codigo AS vta_codigo,
         v.nombre AS vta_nombre,
+        v.ceco,
         v.udmvta,
         m.tipovta,
         m.cantidad,
@@ -437,6 +439,7 @@ export const movimientosRepository = {
         p.nit AS propietario_nit,
         v.codigo AS vta_codigo,
         v.nombre AS vta_nombre,
+        v.ceco,
         v.udmvta,
         m.tipovta,
         m.cantidad,
