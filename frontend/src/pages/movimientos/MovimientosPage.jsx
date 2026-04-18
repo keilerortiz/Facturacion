@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useFilterState } from '../../hooks/filters/useFilterState';
 import {
   Alert,
   Box,
@@ -25,7 +26,6 @@ import MovimientoForm from '../../components/movimientos/MovimientoForm';
 import MovimientosFilters from '../../components/movimientos/MovimientosFilters';
 import MovimientosTable, { COLUMNS as TABLE_COLUMNS } from '../../components/movimientos/MovimientosTable';
 import HistorialDialog from '../../components/movimientos/HistorialDialog';
-import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { useOwnersQuery } from '../../hooks/queries/useOwnersQuery';
 import { useVtasByOwnerQuery } from '../../hooks/queries/useVtasByOwnerQuery';
 import { useTarifaQuery } from '../../hooks/queries/useTarifaQuery';
@@ -65,9 +65,26 @@ const COL_POPOVER_PAPER = { elevation: 3, sx: { p: 1.5, width: 200, mt: 0.5, bor
 function MovimientosPage() {
   const queryClient = useQueryClient();
 
+  // ── Filtros: draft (UI) vs applied (API) ────────────────────────────────
+  // draft   = lo que el usuario está editando (no dispara query)
+  // applied = lo que se envía al backend (cambia solo en eventos explícitos)
+  //
+  // Selects y fechas (propietarioId, vtaId, fechaDesde, fechaHasta):
+  //   → applyField: escribe en draft y applied simultáneamente → query inmediata
+  //
+  // Inputs de texto (usuario, cantidadMin, cantidadMax, observaciones):
+  //   → setDraftField: solo escribe en draft → query NO se dispara mientras escribe
+  //   → La query se dispara cuando el botón "Aplicar" llama a applyPartial
+  const {
+    draft: filters,
+    applied: appliedFilters,
+    setDraftField,
+    applyField,
+    applyPartial,
+    resetFilters: doResetFilters,
+  } = useFilterState(initialFilters);
+
   // ── Estado local (solo UI) ────────────────────────────────────────────────
-  const [filters, setFilters]           = useState(initialFilters);
-  const debouncedFilters                = useDebouncedValue(filters, 450);
   const [form, setForm]                 = useState(initialForm);
   const [order, setOrder]               = useState('desc');
   const [orderBy, setOrderBy]           = useState('fecha');
@@ -93,7 +110,7 @@ function MovimientosPage() {
   // ── Queries (React Query) ─────────────────────────────────────────────────
   const { data: owners = [] } = useOwnersQuery();
 
-  const { data: filterVtas = [] } = useVtasByOwnerQuery(filters.propietarioId);
+  const { data: filterVtas = [] } = useVtasByOwnerQuery(appliedFilters.propietarioId);
 
   const { data: formVtas = [] } = useVtasByOwnerQuery(form.propietarioId);
   stateRef.current.formVtas = formVtas;
@@ -107,7 +124,7 @@ function MovimientosPage() {
     data: movimientosData,
     isFetching: loadingTable,
   } = useMovimientosListQuery({
-    filters: debouncedFilters,
+    filters: appliedFilters,   // solo el estado confirmado (sin campos vacíos internamente)
     page,
     rowsPerPage,
     sortBy: orderBy,
@@ -118,7 +135,8 @@ function MovimientosPage() {
   const total = movimientosData?.pagination?.total ?? 0;
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  const activeFilterCount  = Object.values(filters).filter(Boolean).length;
+  // activeFilterCount refleja los applied (lo que realmente filtra el backend)
+  const activeFilterCount  = Object.values(appliedFilters).filter(Boolean).length;
   const effectiveVisible   = useMemo(
     () => visibleColumnIds ?? toggleableCols.map((c) => c.id),
     [visibleColumnIds]
@@ -137,18 +155,27 @@ function MovimientosPage() {
   const showToast  = useCallback((message, severity = 'success') => setToast({ open: true, message, severity }), []);
   const closeToast = useCallback(() => setToast((t) => ({ ...t, open: false })), []);
 
+  // Campos que deben ejecutar la query de inmediato al cambiar
+  // (selects con valor definido, fechas).
+  // Los inputs de texto van al draft y se aplican solo desde el botón "Aplicar".
+  const IMMEDIATE_FILTER_FIELDS = useMemo(
+    () => new Set(['fechaDesde', 'fechaHasta', 'propietarioId', 'vtaId']),
+    []
+  );
+
   const handleFilterChange = useCallback((field, value) => {
     setPage(0);
-    setFilters((current) => {
-      if (field === 'propietarioId') return { ...current, propietarioId: value, vtaId: '' };
-      return { ...current, [field]: value };
-    });
-  }, [setPage]);
+    if (IMMEDIATE_FILTER_FIELDS.has(field)) {
+      applyField(field, value);   // draft + applied → query se ejecuta ya
+    } else {
+      setDraftField(field, value); // solo draft → sin query todavía
+    }
+  }, [IMMEDIATE_FILTER_FIELDS, applyField, setDraftField, setPage]);
 
   const handleApplyFilters = useCallback((partial) => {
     setPage(0);
-    setFilters((current) => ({ ...current, ...partial }));
-  }, [setPage]);
+    applyPartial(partial);         // aplica filtros avanzados (botón "Aplicar")
+  }, [applyPartial, setPage]);
 
   const handleFormChange = useCallback((field, value) => {
     setFormError('');
@@ -166,14 +193,14 @@ function MovimientosPage() {
   const handleExport = useCallback(async () => {
     setExporting(true);
     try {
-      await movimientosService.exportExcel({ ...debouncedFilters, sortBy: orderBy, sortDir: order });
+      await movimientosService.exportExcel({ ...appliedFilters, sortBy: orderBy, sortDir: order });
       showToast('Archivo descargado correctamente');
     } catch (requestError) {
       showToast(getApiErrorMessage(requestError, 'No fue posible generar el archivo Excel'), 'error');
     } finally {
       setExporting(false);
     }
-  }, [debouncedFilters, orderBy, order, showToast]);
+  }, [appliedFilters, orderBy, order, showToast]);
 
   const handleSort = useCallback((column) => {
     setOrder((prev) => (orderBy === column && prev === 'asc' ? 'desc' : 'asc'));
@@ -181,7 +208,7 @@ function MovimientosPage() {
     setPage(0);
   }, [orderBy, setPage]);
 
-  const handleResetFilters  = useCallback(() => { setFilters(initialFilters); setPage(0); }, [setPage]);
+  const handleResetFilters  = useCallback(() => { doResetFilters(); setPage(0); }, [doResetFilters, setPage]);
   const handleRowsPerChange = useCallback((value) => handleRowsPerPageChange(value), [handleRowsPerPageChange]);
 
   const resetForm = useCallback(() => {
