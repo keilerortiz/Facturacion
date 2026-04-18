@@ -19,7 +19,7 @@ import DashboardRecentActivityTable from '../../components/dashboard/DashboardRe
 import StatCard from '../../components/common/StatCard';
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency, getTodayDate } from '../../utils/date';
-import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { useFilterState } from '../../hooks/filters/useFilterState';
 import { useOwnersQuery } from '../../hooks/queries/useOwnersQuery';
 import { useVtasByOwnerQuery } from '../../hooks/queries/useVtasByOwnerQuery';
 import { useMovimientosListQuery } from '../../hooks/queries/useMovimientosListQuery';
@@ -62,13 +62,20 @@ function DashboardPage() {
   const navigate  = useNavigate();
 
   // ── Filtros ───────────────────────────────────────────────────────────────
-  const [filters, setFilters] = useState({
+  // Todos los campos del Dashboard son inmediatos (fechas + selects), por lo
+  // que usamos applyField/applyPartial directamente sin separación draft/query.
+  const {
+    draft:   filters,     // alias semántico para la UI
+    applied: appliedFilters,
+    applyField,
+    applyPartial,
+    resetFilters,
+  } = useFilterState({
     fechaDesde:    getTodayDate(),
     fechaHasta:    getTodayDate(),
     propietarioId: '',
     vtaId:         '',
   });
-  const debouncedFilters = useDebouncedValue(filters, 450);
   const [page, setPage]  = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -80,13 +87,14 @@ function DashboardPage() {
   const { data: filterVtas = [] } = useVtasByOwnerQuery(filters.propietarioId);
 
   // Movimientos del dashboard (filtros + paginación)
+  // Usa appliedFilters (no el draft) para que la query sea estable.
   const {
     data: movimientosData,
     isLoading: loading,
     isFetching,
     refetch,
   } = useMovimientosListQuery({
-    filters: debouncedFilters,
+    filters: appliedFilters,
     page,
     rowsPerPage,
   });
@@ -103,18 +111,23 @@ function DashboardPage() {
   const maxVolumen     = topVtas[0]?.volumen          ?? 1;
 
   // ── Handlers ──────────────────────────────────────────────────────────────
+  // Cambio de un campo individual (fecha o select) → aplica inmediatamente
   const handleFilterChange = useCallback((key, value) => {
     setPage(0);
-    setFilters((prev) => {
-      if (key === 'propietarioId') return { ...prev, propietarioId: value, vtaId: '' };
-      return { ...prev, [key]: value };
-    });
-  }, []);
+    applyField(key, value);
+  }, [applyField]);
+
+  // Cambio de múltiples campos a la vez (atajos rápidos de fecha)
+  // → evita dos queries consecutivas; aplica todo en un solo estado
+  const handleApplyPartial = useCallback((partial) => {
+    setPage(0);
+    applyPartial(partial);
+  }, [applyPartial]);
 
   const handleClearFilters = useCallback(() => {
-    setFilters({ fechaDesde: getTodayDate(), fechaHasta: getTodayDate(), propietarioId: '', vtaId: '' });
     setPage(0);
-  }, []);
+    resetFilters();
+  }, [resetFilters]);
 
   const handleRowsPerPageChange = useCallback((newValue) => {
     setRowsPerPage(newValue);
@@ -161,6 +174,7 @@ function DashboardPage() {
             owners={owners}
             vtas={filterVtas}
             onFilterChange={handleFilterChange}
+            onApplyPartial={handleApplyPartial}
             onClearFilters={handleClearFilters}
           />
         </Box>

@@ -34,17 +34,16 @@ const QUICK_PRESETS = [
   { id: '7d', label: '7 días', get: () => ({ fechaDesde: isoOffset(-6), fechaHasta: isoToday() }) },
 ];
 
-function DashboardFilters({ filters, owners, vtas, onFilterChange, onClearFilters }) {
+function DashboardFilters({ filters, owners, vtas, onFilterChange, onApplyPartial, onClearFilters }) {
   // Contar filtros activos
   const activeFilterCount = useMemo(
     () => [filters.fechaDesde, filters.fechaHasta, filters.propietarioId, filters.vtaId].filter(Boolean).length,
     [filters.fechaDesde, filters.fechaHasta, filters.propietarioId, filters.vtaId]
   );
 
+  // Aplica ambas fechas en un solo dispatch para evitar dos queries consecutivas
   const handleQuickPreset = (preset) => {
-    const newDates = preset.get();
-    onFilterChange('fechaDesde', newDates.fechaDesde);
-    onFilterChange('fechaHasta', newDates.fechaHasta);
+    onApplyPartial(preset.get());
   };
 
   return (
