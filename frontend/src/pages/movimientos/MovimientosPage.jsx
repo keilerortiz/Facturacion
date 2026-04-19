@@ -145,6 +145,10 @@ function MovimientosPage() {
     () => items.reduce((acc, it) => acc + Number(it.cantidad || 0), 0),
     [items]
   );
+  const pageTotalImporte = useMemo(
+    () => items.reduce((acc, it) => acc + Number(it.total || 0), 0),
+    [items]
+  );
 
   // ── Invalidar lista (equivalente a loadMovimientos) ───────────────────────
   const invalidateList = useCallback(() => {
@@ -239,10 +243,12 @@ function MovimientosPage() {
     const { form, editingMovement, formVtas } = stateRef.current;
 
     // Validaciones
-    const allowedDates = new Set(getAllowedMovimientoDates());
-    if (!allowedDates.has(form.fecha)) {
-      setFormError('La fecha solo puede ser hoy, ayer o hace dos dias.');
-      return;
+    if (!editingMovement) {
+      const allowedDates = new Set(getAllowedMovimientoDates());
+      if (!allowedDates.has(form.fecha)) {
+        setFormError('La fecha solo puede ser hoy, ayer o hace dos dias.');
+        return;
+      }
     }
     if (!form.decada || form.decada.slice(0, 7) !== form.fecha.slice(0, 7)) {
       setFormError('La decada debe pertenecer al mismo mes y anio de la fecha.');
@@ -380,7 +386,7 @@ function MovimientosPage() {
             </Typography>
             {!loadingTable && items.length > 0 && (
               <Typography variant="caption" sx={{ color: 'text.secondary', flexShrink: 0 }}>
-                · &nbsp;{formatCurrency(pageCantidadTotal)} (pág.)
+                · &nbsp;{formatCurrency(pageTotalImporte)} (pág.)
               </Typography>
             )}
 

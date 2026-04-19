@@ -1,0 +1,13 @@
+
+> facturacion-frontend@2.1.0 test:run
+> vitest run
+
+
+ RUN  v4.1.4 C:/Users/psig/OneDrive - Frigorifico Andino/Documents/Desarrollos/Facturacion/frontend
+
+
+ Test Files  6 passed (6)
+      Tests  60 passed (60)
+   Start at  21:24:54
+   Duration  13.46s (transform 950ms, setup 13.64s, import 3.47s, tests 7.65s, environment 29.07s)
+

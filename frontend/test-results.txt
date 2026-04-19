@@ -1,0 +1,406 @@
+
+> facturacion-frontend@2.1.0 test:run
+> vitest run
+
+[2m9:21:08 p. m.[22m [33m[1m[vite][22m[39m [33mwarning: `esbuild` option was specified by "vite:react-babel" plugin. This option is deprecated, please use `oxc` instead.[39m
+[2m9:21:08 p. m.[22m [33m[1m[vite][22m[39m [33mwarning: `optimizeDeps.esbuildOptions` option was specified by "vite:react-babel" plugin. This option is deprecated, please use `optimizeDeps.rolldownOptions` instead.[39m
+[33mBoth esbuild and oxc options were set. oxc options will be used and esbuild options will be ignored.[39m The following esbuild options were set: `{ jsx: 'automatic', jsxImportSource: undefined }`
+
+ RUN  v4.1.4 C:/Users/psig/OneDrive - Frigorifico Andino/Documents/Desarrollos/Facturacion/frontend
+
+stderr | src/__tests__/integration/filters-and-queries.test.js > Integration: Filtros + Queries > debería aplicar un filtro individual y actualizar la query
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?fechaDesde=2026-04-17&fechaHasta=2026-04-17&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+stderr | src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería cargar movimientos iniciales
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+stderr | src/__tests__/integration/filters-and-queries.test.js > Integration: Filtros + Queries > debería deduplicar queries con parámetros en distinto orden
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?propietarioId=1&usuario=test&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?propietarioId=1&usuario=test&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+ ❯ src/__tests__/integration/filters-and-queries.test.js (6 tests | 3 failed) 383ms
+     × debería aplicar un filtro individual y actualizar la query 240ms
+     × debería aplicar múltiples filtros atómicamente 15ms
+     × debería deduplicar queries con parámetros en distinto orden 87ms
+(node:9828) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/__tests__/performance/load.test.js > Load Test: Concurrent Queries > debería manejar 10 queries simultáneas sin degradación
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?propietarioId=1&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?propietarioId=2&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?usuario=user_0&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?usuario=user_1&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?fechaDesde=2026-04-17&fechaHasta=2026-04-20&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?cantidadMin=100&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?cantidadMax=1000&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?propietarioId=1&usuario=user_0&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?fechaDesde=2026-04-17&propietarioId=2&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+stderr | src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería aplicar filtros de fecha
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?fechaDesde=2026-04-17&fechaHasta=2026-04-17&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+stderr | src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería aplicar paginación
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+stderr | src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería cambiar de página
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+stderr | src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería normalizar filtros en queryKey
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?propietarioId=1&usuario=test&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?propietarioId=1&usuario=test&sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+stderr | src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería manejar errores de red
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+stderr | src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería respetar placeholderData
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?propietarioId=1&sortBy=fecha&sortDir=desc&limit=5&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+stderr | src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería respetar placeholderData
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?propietarioId=2&sortBy=fecha&sortDir=desc&limit=5&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+(node:19240) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery - Parámetros especiales > debería aceptar opciones personalizadas
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+stderr | src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery - Parámetros especiales > debería manejar filtros vacíos correctamente
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?sortBy=fecha&sortDir=desc&limit=10&offset=0
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+ ❯ src/__tests__/hooks/useMovimientosListQuery.test.js (11 tests | 9 failed) 1044ms
+     × debería cargar movimientos iniciales 216ms
+     × debería aplicar filtros de fecha 108ms
+     × debería aplicar paginación 84ms
+     × debería cambiar de página 84ms
+     × debería normalizar filtros en queryKey 69ms
+     × debería manejar errores de red 87ms
+     × debería respetar placeholderData 85ms
+     × debería aceptar opciones personalizadas 82ms
+     × debería manejar filtros vacíos correctamente 75ms
+stderr | src/__tests__/performance/queries.perf.test.js > Performance: Pagination > debería manejar 1000 registros en paginación
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:5000/api/movimientos?sortBy=fecha&sortDir=desc&limit=100&offset=1000
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+ ❯ src/__tests__/performance/queries.perf.test.js (9 tests | 1 failed) 1259ms
+     × debería manejar 1000 registros en paginación 69ms
+ ❯ src/__tests__/performance/load.test.js (7 tests | 1 failed) 4336ms
+     × debería manejar 10 queries simultáneas sin degradación 350ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 14 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería cargar movimientos iniciales
+AssertionError: expected undefined to be defined
+ ❯ src/__tests__/hooks/useMovimientosListQuery.test.js:35:33
+     33|     });
+     34|
+     35|     expect(result.current.data).toBeDefined();
+       |                                 ^
+     36|     expect(result.current.data.items).toBeDefined();
+     37|     expect(Array.isArray(result.current.data.items)).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/14]⎯
+
+ FAIL  src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería aplicar filtros de fecha
+TypeError: Cannot read properties of undefined (reading 'items')
+ ❯ src/__tests__/hooks/useMovimientosListQuery.test.js:55:32
+     53|     });
+     54|
+     55|     expect(result.current.data.items.length).toBeGreaterThan(0);
+       |                                ^
+     56|     result.current.data.items.forEach(item => {
+     57|       expect(item.fecha).toBeLessThanOrEqual('2026-04-17');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/14]⎯
+
+ FAIL  src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería aplicar paginación
+TypeError: Cannot read properties of undefined (reading 'items')
+ ❯ src/__tests__/hooks/useMovimientosListQuery.test.js:76:32
+     74|     });
+     75|
+     76|     expect(result.current.data.items.length).toBeLessThanOrEqual(10);
+       |                                ^
+     77|   });
+     78|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/14]⎯
+
+ FAIL  src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería cambiar de página
+TypeError: Cannot read properties of undefined (reading 'items')
+ ❯ src/__tests__/hooks/useMovimientosListQuery.test.js:96:48
+     94|     });
+     95|
+     96|     const firstPageItems = result.current.data.items;
+       |                                                ^
+     97|
+     98|     rerender({ page: 1 });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/14]⎯
+
+ FAIL  src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería normalizar filtros en queryKey
+TypeError: Cannot read properties of undefined (reading 'pagination')
+ ❯ src/__tests__/hooks/useMovimientosListQuery.test.js:126:33
+    124|
+    125|     // Ambas queries deberían devolver datos equivalentes
+    126|     expect(result1.current.data.pagination.total).toBe(result2.current…
+       |                                 ^
+    127|   });
+    128|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/14]⎯
+
+ FAIL  src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería manejar errores de red
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/hooks/useMovimientosListQuery.test.js:141:36
+    139|     });
+    140|
+    141|     expect(result.current.isError).toBe(false);
+       |                                    ^
+    142|   });
+    143|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/14]⎯
+
+ FAIL  src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery > debería respetar placeholderData
+AssertionError: expected undefined to be defined
+ ❯ src/__tests__/hooks/useMovimientosListQuery.test.js:166:33
+    164|
+    165|     // Con placeholderData, los datos anteriores deberían permanecer v…
+    166|     expect(result.current.data).toBeDefined();
+       |                                 ^
+    167|   });
+    168|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/14]⎯
+
+ FAIL  src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery - Parámetros especiales > debería aceptar opciones personalizadas
+AssertionError: expected undefined to be defined
+ ❯ src/__tests__/hooks/useMovimientosListQuery.test.js:197:33
+    195|     });
+    196|
+    197|     expect(result.current.data).toBeDefined();
+       |                                 ^
+    198|   });
+    199|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/14]⎯
+
+ FAIL  src/__tests__/hooks/useMovimientosListQuery.test.js > useMovimientosListQuery - Parámetros especiales > debería manejar filtros vacíos correctamente
+TypeError: Cannot read properties of undefined (reading 'items')
+ ❯ src/__tests__/hooks/useMovimientosListQuery.test.js:218:32
+    216|
+    217|     // Debería retornar todos los movimientos (sin filtros aplicados)
+    218|     expect(result.current.data.items.length).toBeGreaterThan(0);
+       |                                ^
+    219|   });
+    220|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/14]⎯
+
+ FAIL  src/__tests__/integration/filters-and-queries.test.js > Integration: Filtros + Queries > debería aplicar un filtro individual y actualizar la query
+TypeError: Cannot read properties of undefined (reading 'items')
+ ❯ src/__tests__/integration/filters-and-queries.test.js:54:51
+     52|     });
+     53|
+     54|     const initialCount = queryResult.current.data.items.length;
+       |                                                   ^
+     55|
+     56|     // Cambiar propietario
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/14]⎯
+
+ FAIL  src/__tests__/integration/filters-and-queries.test.js > Integration: Filtros + Queries > debería aplicar múltiples filtros atómicamente
+AssertionError: expected '2026-04-17' to be '2026-04-10' // Object.is equality
+
+Expected: "2026-04-10"
+Received: "2026-04-17"
+
+ ❯ src/__tests__/integration/filters-and-queries.test.js:132:43
+    130|     // Debería haber una sola aplicación de ambas fechas
+    131|     expect(queryExecutions.length).toBe(1);
+    132|     expect(queryExecutions[0].fechaDesde).toBe('2026-04-10');
+       |                                           ^
+    133|     expect(queryExecutions[0].fechaHasta).toBe('2026-04-20');
+    134|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/14]⎯
+
+ FAIL  src/__tests__/integration/filters-and-queries.test.js > Integration: Filtros + Queries > debería deduplicar queries con parámetros en distinto orden
+TypeError: Cannot read properties of undefined (reading 'pagination')
+ ❯ src/__tests__/integration/filters-and-queries.test.js:181:33
+    179|
+    180|     // Ambas deberían tener datos equivalentes
+    181|     expect(result1.current.data.pagination.total).toBe(result2.current…
+       |                                 ^
+    182|   });
+    183| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/14]⎯
+
+ FAIL  src/__tests__/performance/load.test.js > Load Test: Concurrent Queries > debería manejar 10 queries simultáneas sin degradación
+AssertionError: expected undefined to be defined
+ ❯ src/__tests__/performance/load.test.js:59:30
+     57|     // Verificar que todas obtuvieron datos
+     58|     results.forEach((r, idx) => {
+     59|       expect(r.current.data).toBeDefined();
+       |                              ^
+     60|       expect(r.current.data.items).toBeDefined();
+     61|     });
+ ❯ src/__tests__/performance/load.test.js:58:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/14]⎯
+
+ FAIL  src/__tests__/performance/queries.perf.test.js > Performance: Pagination > debería manejar 1000 registros en paginación
+TypeError: Cannot read properties of undefined (reading 'items')
+ ❯ src/__tests__/performance/queries.perf.test.js:276:32
+    274|     const duration = performance.now() - startTime;
+    275|
+    276|     expect(result.current.data.items.length).toBeLessThanOrEqual(100);
+       |                                ^
+    277|     console.log(`✓ Deep pagination (page 10): ${duration.toFixed(2)}ms…
+    278|     expect(duration).toBeLessThan(300);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/14]⎯
+
+
+ Test Files  4 failed | 2 passed (6)
+      Tests  14 failed | 46 passed (60)
+   Start at  21:21:08
+   Duration  12.20s (transform 1.56s, setup 13.80s, import 4.01s, tests 7.34s, environment 23.48s)
+
+npm error Lifecycle script `test:run` failed with error:
+npm error code 1
+npm error path C:\Users\psig\OneDrive - Frigorifico Andino\Documents\Desarrollos\Facturacion\frontend
+npm error workspace facturacion-frontend@2.1.0
+npm error location C:\Users\psig\OneDrive - Frigorifico Andino\Documents\Desarrollos\Facturacion\frontend
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c vitest run

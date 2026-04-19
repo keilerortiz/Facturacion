@@ -3,7 +3,14 @@
     "allow": [
       "Bash(sed 's/.*\\\\.//')",
       "Bash(npm install *)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(node -e ' *)",
+      "Bash(npm run *)",
+      "Bash(tee test-results.txt)",
+      "Bash(npx vitest *)",
+      "Bash(xargs grep *)",
+      "mcp__Claude_Preview__preview_start",
+      "mcp__Claude_in_Chrome__tabs_context_mcp"
     ]
   }
 }

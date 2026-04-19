@@ -97,7 +97,7 @@ function MovimientoForm({
                 onChange={(event) => onChange('fecha', event.target.value)}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
-                inputProps={{
+                inputProps={editing ? {} : {
                   min: allowedDates[0],
                   max: allowedDates[allowedDates.length - 1]
                 }}

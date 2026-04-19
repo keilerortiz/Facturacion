@@ -122,8 +122,8 @@ function mapHistorialItem(item) {
   };
 }
 
-function assertMovimientoBusinessRules(data) {
-  if (!isAllowedMovimientoDate(data.fecha)) {
+function assertMovimientoBusinessRules(data, isCreation = true) {
+  if (isCreation && !isAllowedMovimientoDate(data.fecha)) {
     throw new AppError(400, 'La fecha solo puede ser hoy, ayer o hace dos dias');
   }
 
@@ -428,7 +428,7 @@ export const movimientosService = {
             : currentMovement.observaciones
       };
 
-      assertMovimientoBusinessRules(finalState);
+      assertMovimientoBusinessRules(finalState, false);
       const { owner, vta } = await resolveOwnerAndVta(finalState.propietarioId, finalState.vtaId, transaction);
       finalState.tipovta = assertTipovtaForVta(vta, finalState.tipovta);
 
@@ -582,7 +582,6 @@ export const movimientosService = {
       { header: 'CECO', key: 'ceco', width: 12 },
       { header: 'Tipo', key: 'tipovta', width: 14 },
       { header: 'Unidad Medida', key: 'udmvta', width: 16 },
-      { header: 'CECO', key: 'ceco', width: 16 },
       { header: 'Cantidad', key: 'cantidad', width: 14 },
       { header: 'Tarifa', key: 'tarifa', width: 14 },
       { header: 'Total', key: 'total', width: 16 },
@@ -620,7 +619,6 @@ export const movimientosService = {
         ceco: record.ceco ?? '',
         tipovta: record.tipovta ?? '',
         udmvta: record.udmvta ?? '',
-        ceco: record.ceco ?? '',
         cantidad,
         tarifa,
         total,
@@ -648,9 +646,9 @@ export const movimientosService = {
         propietarioNit: '',
         vtaCodigo: '',
         vtaNombre: 'TOTAL',
+        ceco: '',
         tipovta: '',
         udmvta: '',
-        ceco: '',
         cantidad: totalCantidad,
         tarifa: null,
         total: totalImporte,
