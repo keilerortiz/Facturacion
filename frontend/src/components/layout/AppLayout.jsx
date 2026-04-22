@@ -21,8 +21,8 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import Inventory2Icon from '@mui/icons-material/Inventory2';
-import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import PeopleIcon from '@mui/icons-material/People';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -36,8 +36,8 @@ const sidebarWidth = 220;
 const sidebarWidthCollapsed = 60;
 const navigationItems = [
   { label: 'Dashboard', path: '/dashboard', icon: DashboardIcon },
-  { label: 'Movimientos', path: '/movimientos', icon: Inventory2Icon, roles: ['operador', 'consultor'] },
-  { label: 'Usuarios', path: '/usuarios', roles: ['admin'], icon: PeopleAltIcon }
+  { label: 'Movimientos', path: '/movimientos', icon: InventoryIcon, roles: ['operador', 'consultor'] },
+  { label: 'Usuarios', path: '/usuarios', roles: ['admin'], icon: PeopleIcon }
 ];
 
 function AppLayout() {

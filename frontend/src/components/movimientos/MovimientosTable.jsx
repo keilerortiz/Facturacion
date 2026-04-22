@@ -15,8 +15,8 @@ import {
   Tooltip,
   Typography
 } from '@mui/material';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
+import EditIcon from '@mui/icons-material/Edit';
+import HistoryIcon from '@mui/icons-material/History';
 import { formatDate, formatDateTime, formatCurrency } from '../../utils/date';
 import { tokens } from '../../styles/theme';
 
@@ -248,12 +248,12 @@ const MovimientoRow = memo(function MovimientoRow({ item, visibleCols, cellPad, 
             <TableCell key="acciones" align="right" sx={{ padding: '4px 6px' }}>
               <Tooltip title="Editar">
                 <IconButton size="small" color="primary" onClick={handleEdit}>
-                  <EditOutlinedIcon sx={{ fontSize: '16px' }} />
+                  <EditIcon sx={{ fontSize: '16px' }} />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Historial">
                 <IconButton size="small" color="default" onClick={handleHistory}>
-                  <HistoryOutlinedIcon sx={{ fontSize: '16px' }} />
+                  <HistoryIcon sx={{ fontSize: '16px' }} />
                 </IconButton>
               </Tooltip>
             </TableCell>

@@ -18,10 +18,10 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import ViewColumnOutlinedIcon from '@mui/icons-material/ViewColumnOutlined';
-import ViewHeadlineIcon from '@mui/icons-material/ViewHeadline';
-import TableRowsOutlinedIcon from '@mui/icons-material/TableRowsOutlined';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import ViewAgendaIcon from '@mui/icons-material/ViewAgenda';
+import TableRowsIcon from '@mui/icons-material/TableRows';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import MovimientoForm from '../../components/movimientos/MovimientoForm';
 import MovimientosFilters from '../../components/movimientos/MovimientosFilters';
 import MovimientosTable, { COLUMNS as TABLE_COLUMNS } from '../../components/movimientos/MovimientosTable';
@@ -400,10 +400,10 @@ function MovimientosPage() {
               sx={{ '& .MuiToggleButton-root': { py: 0.25, px: 1, fontSize: '0.72rem', height: 30, textTransform: 'none', borderColor: tokens.borderStrong } }}
             >
               <ToggleButton value="compact">
-                <Tooltip title="Vista compacta"><ViewHeadlineIcon sx={{ fontSize: '16px' }} /></Tooltip>
+                <Tooltip title="Vista compacta"><TableRowsIcon sx={{ fontSize: '16px' }} /></Tooltip>
               </ToggleButton>
               <ToggleButton value="comfortable">
-                <Tooltip title="Vista cómoda"><TableRowsOutlinedIcon sx={{ fontSize: '16px' }} /></Tooltip>
+                <Tooltip title="Vista cómoda"><ViewAgendaIcon sx={{ fontSize: '16px' }} /></Tooltip>
               </ToggleButton>
             </ToggleButtonGroup>
 
@@ -418,7 +418,7 @@ function MovimientosPage() {
                   '&:hover': { borderColor: 'primary.main', color: 'primary.main' },
                 }}
               >
-                <ViewColumnOutlinedIcon sx={{ fontSize: '18px' }} />
+                <ViewListIcon sx={{ fontSize: '18px' }} />
               </IconButton>
             </Tooltip>
 
@@ -429,7 +429,7 @@ function MovimientosPage() {
               disabled={exporting || loadingTable}
               startIcon={exporting
                 ? <CircularProgress size={13} color="inherit" />
-                : <FileDownloadOutlinedIcon sx={{ fontSize: '16px !important' }} />}
+                : <FileDownloadIcon sx={{ fontSize: '16px !important' }} />}
               sx={{ flexShrink: 0, fontSize: '0.8rem', textTransform: 'none', borderColor: tokens.borderStrong }}
             >
               {exporting ? 'Exportando...' : 'Excel'}

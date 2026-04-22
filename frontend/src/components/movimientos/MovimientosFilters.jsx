@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import CloseIcon from '@mui/icons-material/Close';
-import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { tokens } from '../../styles/theme';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -236,7 +236,7 @@ function MovimientosFilters({ filters, owners, vtas, activeCount, onChange, onRe
                 '&:hover': { color: 'error.main', bgcolor: 'rgba(211,47,47,0.06)' },
               }}
             >
-              <FilterAltOffIcon sx={{ fontSize: 18 }} />
+              <FilterAltIcon sx={{ fontSize: 18 }} />
             </IconButton>
           </Tooltip>
         )}

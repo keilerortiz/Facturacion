@@ -29,17 +29,16 @@ export function useDashboardAggregations(items) {
       pEntry.count++;
       propietariosMap.set(item.propietarioId, pEntry);
 
-      // Agregar por VTA + Propietario (combinación única)
+      // Agregar por VTA + Propietario (combinación única) - ahora por ingresos
       const vtaPropKey = `${item.vtaId}:${item.propietarioId}`;
       const vEntry = vtasMap.get(vtaPropKey) ?? {
         vta: item.vtaCodigo,
         nombre: item.vtaNombre ?? '',
         propietario: item.propietario,
-        volumen: 0,
+        ingresos: 0,
         count: 0,
-        udmvta: item.udmvta ?? 'uds',
       };
-      vEntry.volumen += typeof item.cantidad === 'number' ? item.cantidad : 0;
+      vEntry.ingresos += typeof item.total === 'number' ? item.total : 0;
       vEntry.count++;
       vtasMap.set(vtaPropKey, vEntry);
     }
@@ -49,7 +48,7 @@ export function useDashboardAggregations(items) {
       .slice(0, 5);
 
     const topVtas = [...vtasMap.values()]
-      .sort((a, b) => b.volumen - a.volumen)
+      .sort((a, b) => b.ingresos - a.ingresos)
       .slice(0, 5);
 
     return { topPropietarios, topVtas };

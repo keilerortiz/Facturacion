@@ -10,7 +10,7 @@ import {
   TablePagination,
   Typography,
 } from '@mui/material';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { formatCurrency, formatDate } from '../../utils/date';
 import { tokens } from '../../styles/theme';
 import { movimientosService } from '../../services/movimientosService';
@@ -75,7 +75,7 @@ function DashboardRecentActivityTable({
             disabled={exporting || items.length === 0}
             startIcon={exporting
               ? <CircularProgress size={13} color="inherit" />
-              : <FileDownloadOutlinedIcon sx={{ fontSize: '16px !important' }} />}
+              : <FileDownloadIcon sx={{ fontSize: '16px !important' }} />}
             sx={{ flexShrink: 0, fontSize: '0.8rem', textTransform: 'none', borderColor: tokens.borderStrong }}
           >
             {exporting ? 'Exportando...' : 'Excel'}

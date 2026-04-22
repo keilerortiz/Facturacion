@@ -1,7 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Alert,
   Box,
   Button,
   CircularProgress,
@@ -10,13 +8,14 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import RefreshIcon from '@mui/icons-material/Refresh'; // ✓ Valid icon
 import { tokens } from '../../styles/theme';
 import DashboardFilters from '../../components/dashboard/DashboardFilters';
 import DashboardRecentActivityTable from '../../components/dashboard/DashboardRecentActivityTable';
-import StatCard from '../../components/common/StatCard';
+import KPIGrid from '../../components/dashboard/KPISection/KPIGrid';
+import HorizontalBarChart from '../../components/dashboard/ChartsSection/HorizontalBarChart';
+import DonutChart from '../../components/dashboard/ChartsSection/DonutChart';
+import ComboChart from '../../components/dashboard/ChartsSection/ComboChart';
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency, getTodayDate } from '../../utils/date';
 import { useFilterState } from '../../hooks/filters/useFilterState';
@@ -24,42 +23,12 @@ import { useOwnersQuery } from '../../hooks/queries/useOwnersQuery';
 import { useVtasByOwnerQuery } from '../../hooks/queries/useVtasByOwnerQuery';
 import { useMovimientosListQuery } from '../../hooks/queries/useMovimientosListQuery';
 import { useDashboardKPIs } from '../../hooks/useDashboardKPIs';
-import { useDashboardAlerts } from '../../hooks/useDashboardAlerts';
 import { useDashboardAggregations } from '../../hooks/useDashboardAggregations';
-
-// ── Barra de proporción para Top 5 ───────────────────────────────────────────
-
-function TopBar({ label, valueLabel, pct }) {
-  return (
-    <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="baseline" sx={{ mb: 0.5, gap: 1 }}>
-        <Typography variant="body2" noWrap sx={{ maxWidth: '75%', fontWeight: 500, fontSize: '0.85rem' }}>
-          {label}
-        </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0, fontSize: '0.8rem' }}>
-          {valueLabel}
-        </Typography>
-      </Stack>
-      <Box sx={{ height: 5, borderRadius: 3, bgcolor: tokens.bgLight }}>
-        <Box
-          sx={{
-            height: '100%',
-            borderRadius: 3,
-            width: `${Math.max(pct, 3)}%`,
-            bgcolor: 'primary.main',
-            transition: 'width 0.4s ease',
-          }}
-        />
-      </Box>
-    </Box>
-  );
-}
-
+import { useDashboardChartData } from '../../hooks/useDashboardChartData';
 // ── DashboardPage ─────────────────────────────────────────────────────────────
 
 function DashboardPage() {
   const { user } = useAuth();
-  const navigate  = useNavigate();
 
   // ── Filtros ───────────────────────────────────────────────────────────────
   // Todos los campos del Dashboard son inmediatos (fechas + selects), por lo
@@ -104,11 +73,8 @@ function DashboardPage() {
   const pagination = movimientosData?.pagination ?? null;
 
   const kpis                         = useDashboardKPIs(items, pagination);
-  const alerts                       = useDashboardAlerts(items);
   const { topPropietarios, topVtas } = useDashboardAggregations(items);
-
-  const maxFacturacion = topPropietarios[0]?.total   ?? 1;
-  const maxVolumen     = topVtas[0]?.volumen          ?? 1;
+  const { ingresosPorTipo, ingresosPorCeco, ingresosPorDia, sparklineData } = useDashboardChartData(items);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   // Cambio de un campo individual (fecha o select) → aplica inmediatamente
@@ -190,103 +156,89 @@ function DashboardPage() {
         </Button>
       </Stack>
 
-      {/* ── KPIs ──────────────────────────────────────────────────────────── */}
+      {/* ── KPI Grid (5 tarjetas principales) ──────────────────────────────── */}
+      <KPIGrid
+        totalMovimientos={kpis.totalHoy}
+        ticketPromedio={formatCurrency(kpis.ticketPromedio)}
+        facturacionTotal={formatCurrency(kpis.facturacionTotal)}
+        cantidadTotal={items.reduce((sum, item) => sum + (item.cantidad || 0), 0)}
+        sparklineData={sparklineData}
+      />
+
+      {/* ── Charts Section ────────────────────────────────────────────────────── */}
+      {/* Fila 1: Top Propietarios + Donuts */}
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={6} md={3}>
-          <StatCard
-            label="Total movimientos hoy"
-            value={kpis.totalHoy ?? '—'}
-            helper="Registrados en el sistema"
-            tone="primary.main"
+        <Grid item xs={12} md={5}>
+          <HorizontalBarChart
+            title="Top Propietarios"
+            subtitle="Facturación (últimos registros)"
+            data={topPropietarios.map((p) => ({
+              name: p.propietario,
+              value: p.total,
+            }))}
+            nameKey="name"
+            dataKey="value"
+            barColor="#1976d2"
+            showValues
+            showPercentage
+            height={300}
           />
         </Grid>
-        <Grid item xs={6} md={3}>
-          <StatCard
-            label="Volumen acumulado"
-            value={kpis.volumenTotal.toFixed(2)}
-            helper="Σ cantidad · vista actual"
-            tone="secondary.main"
+        <Grid item xs={12} sm={6} md={3.5}>
+          <DonutChart
+            title="Ingresos por Tipo"
+            data={ingresosPorTipo}
+            dataKey="value"
+            nameKey="name"
+            colors={['#1976d2', '#4caf50', '#ff9800', '#f44336', '#2196f3']}
+            height={300}
+            showLegend
           />
         </Grid>
-        <Grid item xs={12} md={6}>
-          <StatCard
-            label="Facturación"
-            value={formatCurrency(kpis.facturacionTotal)}
-            helper="Σ total · vista actual"
-            tone="success.main"
+        <Grid item xs={12} sm={6} md={3.5}>
+          <DonutChart
+            title="Ingresos por CECO"
+            data={ingresosPorCeco}
+            dataKey="value"
+            nameKey="name"
+            colors={['#1976d2', '#4caf50', '#ff9800', '#f44336', '#2196f3', '#81c784', '#66bb6a', '#43a047', '#388e3c', '#e91e63', '#9c27b0', '#00bcd4', '#ffeb3b', '#8bc34a']}
+            height={300}
+            showLegend
           />
         </Grid>
       </Grid>
 
-      {/* ── Alertas operativas ────────────────────────────────────────────── */}
-      {alerts.length > 0 && (
-        <Stack spacing={1} sx={{ mb: 2 }}>
-          {alerts.map((a) => (
-            <Alert
-              key={a.id}
-              severity={a.severity}
-              icon={a.severity === 'error' ? <ErrorOutlineIcon /> : <WarningAmberIcon />}
-              action={
-                <Button
-                  size="small"
-                  color="inherit"
-                  onClick={() => navigate('/movimientos')}
-                  sx={{ whiteSpace: 'nowrap' }}
-                >
-                  Ver detalle
-                </Button>
-              }
-              sx={{ borderRadius: 2 }}
-            >
-              {a.label}
-            </Alert>
-          ))}
-        </Stack>
-      )}
-
-      {/* ── Top 5 ─────────────────────────────────────────────────────────── */}
+      {/* Fila 2: Top VTA + Combo Chart */}
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={12} md={6}>
-          <Paper elevation={1} sx={{ p: 2, border: `1px solid ${tokens.borderCard}`, height: '100%' }}>
-            <Typography variant="subtitle1" sx={{ mb: 1.5, fontWeight: 700 }}>
-              Top propietarios · facturación
-            </Typography>
-            {topPropietarios.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">Sin datos</Typography>
-            ) : (
-              <Stack spacing={1.5}>
-                {topPropietarios.map((p, idx) => (
-                  <TopBar
-                    key={`propietario-${idx}`}
-                    label={p.propietario}
-                    valueLabel={formatCurrency(p.total)}
-                    pct={(p.total / maxFacturacion) * 100}
-                  />
-                ))}
-              </Stack>
-            )}
-          </Paper>
+        <Grid item xs={12} md={5}>
+          <HorizontalBarChart
+            title="Top VTA"
+            subtitle="Ingresos (últimos registros)"
+            data={topVtas.map((v) => ({
+              name: `${v.vta} - ${v.nombre}`,
+              value: v.ingresos,
+            }))}
+            nameKey="name"
+            dataKey="value"
+            barColor="#2196f3"
+            showValues
+            showPercentage
+            height={300}
+          />
         </Grid>
-        <Grid item xs={12} md={6}>
-          <Paper elevation={1} sx={{ p: 2, border: `1px solid ${tokens.borderCard}`, height: '100%' }}>
-            <Typography variant="subtitle1" sx={{ mb: 1.5, fontWeight: 700 }}>
-              Top VTA · volumen
-            </Typography>
-            {topVtas.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">Sin datos</Typography>
-            ) : (
-              <Stack spacing={1.5}>
-                {topVtas.map((v, idx) => (
-                  <TopBar
-                    key={`vta-${idx}`}
-                    label={`${v.vta} · ${v.nombre} (${v.propietario})`}
-                    valueLabel={`${v.volumen.toFixed(2)} ${v.udmvta}`}
-                    pct={(v.volumen / maxVolumen) * 100}
-                  />
-                ))}
-              </Stack>
-            )}
-          </Paper>
+        <Grid item xs={12} md={7}>
+          <ComboChart
+            title="Ingresos × Día"
+            subtitle="Barras: ingresos | Línea: cantidad"
+            data={ingresosPorDia}
+            barKey="ingresos"
+            lineKey="cantidad"
+            barColor="#1976d2"
+            lineColor="#4caf50"
+            barLabel="Ingresos ($)"
+            lineLabel="Cantidad"
+            height={300}
+          />
         </Grid>
       </Grid>
 

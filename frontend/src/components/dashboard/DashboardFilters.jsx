@@ -8,7 +8,7 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -29,9 +29,15 @@ function isoOffset(days) {
   return d.toISOString().slice(0, 10);
 }
 
+function isoFirstDayOfMonth() {
+  const d = new Date();
+  d.setDate(1);
+  return d.toISOString().slice(0, 10);
+}
+
 const QUICK_PRESETS = [
-  { id: 'hoy', label: 'Hoy', get: () => ({ fechaDesde: isoToday(), fechaHasta: isoToday() }) },
   { id: '7d', label: '7 días', get: () => ({ fechaDesde: isoOffset(-6), fechaHasta: isoToday() }) },
+  { id: 'month', label: 'Este mes', get: () => ({ fechaDesde: isoFirstDayOfMonth(), fechaHasta: isoToday() }) },
 ];
 
 function DashboardFilters({ filters, owners, vtas, onFilterChange, onApplyPartial, onClearFilters }) {
@@ -116,7 +122,7 @@ function DashboardFilters({ filters, owners, vtas, onFilterChange, onApplyPartia
           <Button
             variant="outlined"
             size="small"
-            startIcon={<FilterAltOffIcon />}
+            startIcon={<FilterAltIcon />}
             onClick={onClearFilters}
             sx={{
               fontSize: '0.75rem',

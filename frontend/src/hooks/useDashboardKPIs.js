@@ -9,25 +9,22 @@ import { useMemo } from 'react';
  */
 export function useDashboardKPIs(items, pagination) {
   return useMemo(() => {
-    if (!items) {
-      return { totalHoy: null, volumenTotal: 0, facturacionTotal: 0, conErrores: 0, scope: 0 };
+    if (!items || items.length === 0) {
+      return { totalHoy: null, facturacionTotal: 0, ticketPromedio: 0, scope: 0 };
     }
 
-    let volumenTotal = 0;
     let facturacionTotal = 0;
-    let conErrores = 0;
 
     for (const item of items) {
-      if (typeof item.cantidad === 'number') volumenTotal += item.cantidad;
       if (typeof item.total === 'number') facturacionTotal += item.total;
-      if (item.cantidad <= 0 || item.tarifa === null || item.tarifa <= 0) conErrores++;
     }
+
+    const ticketPromedio = items.length > 0 ? facturacionTotal / items.length : 0;
 
     return {
       totalHoy: pagination?.total ?? null,
-      volumenTotal,
       facturacionTotal,
-      conErrores,
+      ticketPromedio,
       scope: items.length,
     };
   }, [items, pagination]);
