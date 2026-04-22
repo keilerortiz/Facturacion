@@ -56,18 +56,18 @@ function DashboardRecentActivityTable({
   }, [onRowsPerPageChange]);
 
   return (
-    <Paper elevation={1} sx={{ border: `1px solid ${tokens.borderCard}` }}>
+    <Paper elevation={0} sx={{ border: `1px solid ${tokens.borderCard}`, borderRadius: 2, bgcolor: 'background.paper' }}>
       {/* Header */}
-      <Box sx={{ px: 2, pt: 2, pb: 1 }}>
-        <Stack direction="row" alignItems="baseline" spacing={1.5} justifyContent="space-between">
-          <Stack direction="row" alignItems="baseline" spacing={1.5}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+      <Box sx={{ px: { xs: 2, sm: 2.5, md: 3 }, pt: 2.5, pb: 2, bgcolor: 'rgba(0, 0, 0, 0.01)', borderBottom: `1px solid ${tokens.borderCard}` }}>
+        <Stack direction="row" alignItems="center" spacing={2} justifyContent="space-between">
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, fontSize: '1rem' }}>
               Actividad reciente
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', mt: 0.5, display: 'block' }}>
               últimos {items.length} registros del día
             </Typography>
-          </Stack>
+          </Box>
           <Button
             variant="outlined"
             size="small"
@@ -82,7 +82,6 @@ function DashboardRecentActivityTable({
           </Button>
         </Stack>
       </Box>
-      <Divider />
 
       {/* Content */}
       {items.length === 0 ? (
