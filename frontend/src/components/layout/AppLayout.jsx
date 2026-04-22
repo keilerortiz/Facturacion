@@ -36,7 +36,7 @@ const sidebarWidth = 220;
 const sidebarWidthCollapsed = 60;
 const navigationItems = [
   { label: 'Dashboard', path: '/dashboard', icon: DashboardIcon },
-  { label: 'Movimientos', path: '/movimientos', icon: InventoryIcon, roles: ['operador', 'consultor'] },
+  { label: 'Movimientos', path: '/movimientos', icon: InventoryIcon, roles: ['operador'] },
   { label: 'Usuarios', path: '/usuarios', roles: ['admin'], icon: PeopleIcon }
 ];
 

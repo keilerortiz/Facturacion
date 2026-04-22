@@ -153,6 +153,7 @@ function EnhancedKPICard({
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
+          textAlign: 'right',
         }}
         title={String(value)}
       >
@@ -170,6 +171,7 @@ function EnhancedKPICard({
             display: 'flex',
             alignItems: 'center',
             gap: 0.5,
+            justifyContent: 'flex-end',
           }}
         >
           {changeType === 'positive' && '↑ '}

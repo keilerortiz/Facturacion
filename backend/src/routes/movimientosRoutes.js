@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { movimientosController } from '../controllers/movimientos/movimientosController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
+import { requireRoles } from '../middleware/roleMiddleware.js';
 
 export const movimientosRoutes = Router();
 
 movimientosRoutes.use(authMiddleware);
+movimientosRoutes.use(requireRoles('operador'));
 
 movimientosRoutes.get('/init', movimientosController.init);
 movimientosRoutes.get('/propietarios/lista', movimientosController.listOwners);
